@@ -1,10 +1,10 @@
 use std::path::Path;
 
-use arazzo_core::{DocumentFormat, parse_document_str};
+use arazzo_core::{parse_document_str, DocumentFormat};
 use serde::Serialize;
 
 use crate::exit_codes;
-use crate::output::{OutputFormat, print_error, print_result};
+use crate::output::{print_error, print_result, OutputFormat};
 use crate::OutputArgs;
 
 #[derive(Serialize)]
@@ -26,7 +26,11 @@ pub async fn workflows_cmd(path: &Path, output: OutputArgs) -> i32 {
     let content = match std::fs::read_to_string(path) {
         Ok(v) => v,
         Err(e) => {
-            print_error(output.format, output.quiet, &format!("failed to read {}: {e}", path.display()));
+            print_error(
+                output.format,
+                output.quiet,
+                &format!("failed to read {}: {e}", path.display()),
+            );
             return exit_codes::RUNTIME_ERROR;
         }
     };
@@ -39,12 +43,17 @@ pub async fn workflows_cmd(path: &Path, output: OutputArgs) -> i32 {
         }
     };
 
-    let workflows: Vec<WorkflowInfo> = parsed.document.workflows.iter().map(|w| WorkflowInfo {
-        workflow_id: w.workflow_id.clone(),
-        summary: w.summary.clone(),
-        description: w.description.clone(),
-        step_count: w.steps.len(),
-    }).collect();
+    let workflows: Vec<WorkflowInfo> = parsed
+        .document
+        .workflows
+        .iter()
+        .map(|w| WorkflowInfo {
+            workflow_id: w.workflow_id.clone(),
+            summary: w.summary.clone(),
+            description: w.description.clone(),
+            step_count: w.steps.len(),
+        })
+        .collect();
 
     let result = WorkflowsResult { workflows };
 
@@ -62,4 +71,3 @@ pub async fn workflows_cmd(path: &Path, output: OutputArgs) -> i32 {
 
     exit_codes::SUCCESS
 }
-

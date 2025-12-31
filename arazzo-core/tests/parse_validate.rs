@@ -1,4 +1,4 @@
-use arazzo_core::{DocumentFormat, parse_document_str, validate_document};
+use arazzo_core::{parse_document_str, validate_document, DocumentFormat};
 
 fn minimal_valid_yaml() -> &'static str {
     r#"
@@ -65,7 +65,9 @@ fn parse_unknown_format_is_rejected() {
     let err = parse_document_str("not: [valid", DocumentFormat::Auto).unwrap_err();
     // The parser now returns specific YAML/JSON errors instead of generic "unknown format"
     // Since "not: [valid" looks like YAML, it will try YAML first and return a YAML parsing error
-    assert!(format!("{err}").contains("failed to parse as YAML") || format!("{err}").contains("YAML"));
+    assert!(
+        format!("{err}").contains("failed to parse as YAML") || format!("{err}").contains("YAML")
+    );
 }
 
 #[test]
@@ -231,7 +233,10 @@ components:
 "#;
     let parsed = parse_document_str(bad, DocumentFormat::Yaml).unwrap();
     let err = validate_document(&parsed.document).unwrap_err();
-    assert!(err.violations.iter().any(|v| v.message.contains("map key must match")));
+    assert!(err
+        .violations
+        .iter()
+        .any(|v| v.message.contains("map key must match")));
 }
 
 #[test]
@@ -257,7 +262,8 @@ workflows:
     assert!(err
         .violations
         .iter()
-        .any(|v| v.path.ends_with(".steps[0].outputs.x") && v.message.contains("invalid runtime expression")));
+        .any(|v| v.path.ends_with(".steps[0].outputs.x")
+            && v.message.contains("invalid runtime expression")));
 }
 
 #[test]
@@ -281,7 +287,8 @@ workflows:
     assert!(err
         .violations
         .iter()
-        .any(|v| v.path.ends_with(".steps[0].operationPath") && v.message.contains("invalid template expression")));
+        .any(|v| v.path.ends_with(".steps[0].operationPath")
+            && v.message.contains("invalid template expression")));
 }
 
 #[test]
@@ -308,6 +315,6 @@ workflows:
     assert!(err
         .violations
         .iter()
-        .any(|v| v.path.ends_with(".steps[0].requestBody.payload") && v.message.contains("invalid expression inside value")));
+        .any(|v| v.path.ends_with(".steps[0].requestBody.payload")
+            && v.message.contains("invalid expression inside value")));
 }
-

@@ -92,4 +92,3 @@ async fn http_client_handles_invalid_url() {
         _ => panic!("expected network error"),
     }
 }
-

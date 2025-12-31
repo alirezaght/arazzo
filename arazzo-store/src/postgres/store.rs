@@ -46,9 +46,17 @@ impl PostgresStore {
         steps: &[NewStep],
     ) -> Result<Uuid, StoreError> {
         runs::create_run_with_id(
-            &self.pool, run_id, workflow_doc_id, workflow_id,
-            created_by, idempotency_key, inputs, overrides, steps,
-        ).await
+            &self.pool,
+            run_id,
+            workflow_doc_id,
+            workflow_id,
+            created_by,
+            idempotency_key,
+            inputs,
+            overrides,
+            steps,
+        )
+        .await
     }
 
     pub async fn mark_run_started(&self, run_id: Uuid) -> Result<(), StoreError> {
@@ -84,11 +92,19 @@ impl StateStore for PostgresStore {
         runs::create_run(&self.pool, run, steps, edges).await
     }
 
-    async fn claim_runnable_steps(&self, run_id: Uuid, limit: i64) -> Result<Vec<RunStep>, StoreError> {
+    async fn claim_runnable_steps(
+        &self,
+        run_id: Uuid,
+        limit: i64,
+    ) -> Result<Vec<RunStep>, StoreError> {
         steps::claim_runnable_steps(&self.pool, run_id, limit).await
     }
 
-    async fn insert_attempt_auto(&self, run_step_id: Uuid, request: JsonValue) -> Result<(Uuid, i32), StoreError> {
+    async fn insert_attempt_auto(
+        &self,
+        run_step_id: Uuid,
+        request: JsonValue,
+    ) -> Result<(Uuid, i32), StoreError> {
         steps::insert_attempt_auto(&self.pool, run_step_id, request).await
     }
 
@@ -101,10 +117,24 @@ impl StateStore for PostgresStore {
         duration_ms: Option<i32>,
         finished_at: Option<DateTime<Utc>>,
     ) -> Result<(), StoreError> {
-        steps::finish_attempt(&self.pool, attempt_id, status, response, error, duration_ms, finished_at).await
+        steps::finish_attempt(
+            &self.pool,
+            attempt_id,
+            status,
+            response,
+            error,
+            duration_ms,
+            finished_at,
+        )
+        .await
     }
 
-    async fn mark_step_succeeded(&self, run_id: Uuid, step_id: &str, outputs: JsonValue) -> Result<(), StoreError> {
+    async fn mark_step_succeeded(
+        &self,
+        run_id: Uuid,
+        step_id: &str,
+        outputs: JsonValue,
+    ) -> Result<(), StoreError> {
         steps::mark_step_succeeded(&self.pool, run_id, step_id, outputs).await
     }
 
@@ -112,11 +142,22 @@ impl StateStore for PostgresStore {
         steps::get_step_outputs(&self.pool, run_id, step_id).await
     }
 
-    async fn schedule_retry(&self, run_id: Uuid, step_id: &str, delay_ms: i64, error: JsonValue) -> Result<(), StoreError> {
+    async fn schedule_retry(
+        &self,
+        run_id: Uuid,
+        step_id: &str,
+        delay_ms: i64,
+        error: JsonValue,
+    ) -> Result<(), StoreError> {
         steps::schedule_retry(&self.pool, run_id, step_id, delay_ms, error).await
     }
 
-    async fn mark_step_failed(&self, run_id: Uuid, step_id: &str, error: JsonValue) -> Result<(), StoreError> {
+    async fn mark_step_failed(
+        &self,
+        run_id: Uuid,
+        step_id: &str,
+        error: JsonValue,
+    ) -> Result<(), StoreError> {
         steps::mark_step_failed(&self.pool, run_id, step_id, error).await
     }
 
@@ -124,7 +165,12 @@ impl StateStore for PostgresStore {
         runs::mark_run_started(&self.pool, run_id).await
     }
 
-    async fn mark_run_finished(&self, run_id: Uuid, status: RunStatus, error: Option<JsonValue>) -> Result<(), StoreError> {
+    async fn mark_run_finished(
+        &self,
+        run_id: Uuid,
+        status: RunStatus,
+        error: Option<JsonValue>,
+    ) -> Result<(), StoreError> {
         runs::mark_run_finished_enum(&self.pool, run_id, status, error).await
     }
 
@@ -148,7 +194,12 @@ impl StateStore for PostgresStore {
         steps::get_step_attempts(&self.pool, run_step_id).await
     }
 
-    async fn get_events_after(&self, run_id: Uuid, after_id: i64, limit: i64) -> Result<Vec<RunEvent>, StoreError> {
+    async fn get_events_after(
+        &self,
+        run_id: Uuid,
+        after_id: i64,
+        limit: i64,
+    ) -> Result<Vec<RunEvent>, StoreError> {
         events::get_events_after(&self.pool, run_id, after_id, limit).await
     }
 

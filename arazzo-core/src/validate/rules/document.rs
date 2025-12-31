@@ -2,7 +2,7 @@ use std::collections::HashSet;
 
 use crate::types::ArazzoDocument;
 use crate::validate::rules::{common::validate_runtime_expr, components, info, workflow};
-use crate::validate::validator::{ID_RE, Validator};
+use crate::validate::validator::{Validator, ID_RE};
 
 pub(crate) fn validate_document(v: &mut Validator, doc: &ArazzoDocument) {
     v.validate_extensions("$", &doc.extensions);
@@ -76,4 +76,3 @@ pub(crate) fn validate_document(v: &mut Validator, doc: &ArazzoDocument) {
         components::validate_components(v, c, "$.components");
     }
 }
-

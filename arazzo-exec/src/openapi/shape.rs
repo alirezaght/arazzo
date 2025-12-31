@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 
 use crate::openapi::model::{
-    CompiledOperationShape, collect_content_types, extract_parameter_obj, is_request_body_required,
+    collect_content_types, extract_parameter_obj, is_request_body_required, CompiledOperationShape,
 };
 use crate::openapi::refs::resolve_ref;
 
@@ -30,7 +30,10 @@ pub(crate) fn compile_operation_shape(
                 &mut diagnostics,
             ));
         }
-        if let Some(op_obj) = path_item.get(method).or_else(|| path_item.get(&method.to_lowercase())) {
+        if let Some(op_obj) = path_item
+            .get(method)
+            .or_else(|| path_item.get(&method.to_lowercase()))
+        {
             // optional: op-specific inside path item already provided via `operation`.
             let _ = op_obj;
         }
@@ -64,7 +67,10 @@ pub(crate) fn compile_operation_shape(
                 rb
             };
 
-            (is_request_body_required(rb_resolved), collect_content_types(rb_resolved))
+            (
+                is_request_body_required(rb_resolved),
+                collect_content_types(rb_resolved),
+            )
         }
     };
 
@@ -79,7 +85,12 @@ pub(crate) fn compile_operation_shape(
     )
 }
 
-pub(crate) fn select_base_url(doc: &serde_json::Value, path: &str, method: &str, operation: &serde_json::Value) -> Option<String> {
+pub(crate) fn select_base_url(
+    doc: &serde_json::Value,
+    path: &str,
+    method: &str,
+    operation: &serde_json::Value,
+) -> Option<String> {
     // Prefer operation.servers[0].url, then path-item.servers[0].url, then doc.servers[0].url.
     if let Some(url) = servers_first_url(operation) {
         return Some(url);
@@ -119,7 +130,9 @@ fn extract_params_with_refs(
                     if let Some(param) = extract_parameter_obj(v) {
                         out.push(param);
                     } else {
-                        diagnostics.push(format!("{source_name}: {ctx} $ref did not resolve to a Parameter Object"));
+                        diagnostics.push(format!(
+                            "{source_name}: {ctx} $ref did not resolve to a Parameter Object"
+                        ));
                     }
                 }
                 Err(e) => diagnostics.push(format!("{source_name}: {ctx} {e}")),
@@ -131,4 +144,3 @@ fn extract_params_with_refs(
 
     out
 }
-

@@ -27,9 +27,16 @@ impl ConcurrencyLimits {
     pub async fn acquire(&self, source_name: Option<&str>) -> ConcurrencyPermit {
         // Semaphore acquire should never fail unless the semaphore is closed,
         // which should never happen in normal operation. If it does, it's a bug.
-        let global = self.global.clone().acquire_owned().await.unwrap_or_else(|_| {
-            panic!("concurrency semaphore closed unexpectedly. This is a bug - please report it.");
-        });
+        let global = self
+            .global
+            .clone()
+            .acquire_owned()
+            .await
+            .unwrap_or_else(|_| {
+                panic!(
+                    "concurrency semaphore closed unexpectedly. This is a bug - please report it."
+                );
+            });
         let source = match source_name {
             Some(src) => self
                 .per_source
@@ -54,4 +61,3 @@ pub struct ConcurrencyPermit {
     _global: OwnedSemaphorePermit,
     _source: Option<OwnedSemaphorePermit>,
 }
-

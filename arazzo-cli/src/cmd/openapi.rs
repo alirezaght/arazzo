@@ -1,11 +1,11 @@
 use std::path::Path;
 
-use arazzo_core::{DocumentFormat, parse_document_str};
+use arazzo_core::{parse_document_str, DocumentFormat};
 use serde::Serialize;
 
 use crate::exit_codes;
-use crate::output::{OutputFormat, print_error, print_result};
-use crate::{OutputArgs, OpenApiArgs};
+use crate::output::{print_error, print_result, OutputFormat};
+use crate::{OpenApiArgs, OutputArgs};
 
 #[derive(Serialize)]
 struct ResolvedEndpoint {
@@ -29,7 +29,11 @@ pub async fn openapi_cmd(path: &Path, output: OutputArgs, _openapi: OpenApiArgs)
     let content = match std::fs::read_to_string(path) {
         Ok(v) => v,
         Err(e) => {
-            print_error(output.format, output.quiet, &format!("failed to read {}: {e}", path.display()));
+            print_error(
+                output.format,
+                output.quiet,
+                &format!("failed to read {}: {e}", path.display()),
+            );
             return exit_codes::RUNTIME_ERROR;
         }
     };
@@ -46,7 +50,9 @@ pub async fn openapi_cmd(path: &Path, output: OutputArgs, _openapi: OpenApiArgs)
     let mut errors = Vec::new();
 
     for wf in &parsed.document.workflows {
-        let compiled = arazzo_exec::Compiler::default().compile_workflow(&parsed.document, wf).await;
+        let compiled = arazzo_exec::Compiler::default()
+            .compile_workflow(&parsed.document, wf)
+            .await;
 
         for d in &compiled.diagnostics {
             if d.severity == arazzo_exec::openapi::DiagnosticSeverity::Error {
@@ -72,7 +78,10 @@ pub async fn openapi_cmd(path: &Path, output: OutputArgs, _openapi: OpenApiArgs)
         }
     }
 
-    let result = OpenApiResult { endpoints, errors: errors.clone() };
+    let result = OpenApiResult {
+        endpoints,
+        errors: errors.clone(),
+    };
 
     if output.format == OutputFormat::Text && !output.quiet {
         if !result.errors.is_empty() {
@@ -96,4 +105,3 @@ pub async fn openapi_cmd(path: &Path, output: OutputArgs, _openapi: OpenApiArgs)
         exit_codes::VALIDATION_FAILED
     }
 }
-

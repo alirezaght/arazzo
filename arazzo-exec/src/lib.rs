@@ -4,14 +4,16 @@
 //!
 //! This crate is intentionally thin for now; the spec parsing/validation lives in `arazzo-core`.
 
-pub mod openapi;
 pub mod compile;
-pub mod secrets;
+pub mod executor;
+pub mod openapi;
 pub mod policy;
 pub mod retry;
-pub mod executor;
+pub mod secrets;
 
-pub use crate::compile::{CompiledPlan, CompiledRequestBody, CompiledStep, Compiler, MissingParameter};
+pub use crate::compile::{
+    CompiledPlan, CompiledRequestBody, CompiledStep, Compiler, MissingParameter,
+};
 pub use crate::executor::Executor;
 
 pub struct Engine;

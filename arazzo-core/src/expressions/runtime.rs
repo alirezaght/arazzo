@@ -4,9 +4,8 @@ use regex::Regex;
 
 use super::json_pointer::{JsonPointer, JsonPointerError};
 
-static TCHAR_RE: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r"^[!#$%&'*+\-.^_`|~0-9A-Za-z]+$").expect("valid regex")
-});
+static TCHAR_RE: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"^[!#$%&'*+\-.^_`|~0-9A-Za-z]+$").expect("valid regex"));
 
 static NAME_RE: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"^[a-zA-Z0-9\.\-_]+$").expect("valid regex"));
@@ -80,7 +79,9 @@ pub fn parse_runtime_expr(input: &str) -> Result<RuntimeExpr, RuntimeExprError> 
         return Ok(RuntimeExpr::Workflows(parse_name_path(rest, pointer)?));
     }
     if let Some(rest) = head.strip_prefix("sourceDescriptions.") {
-        return Ok(RuntimeExpr::SourceDescriptions(parse_name_path(rest, pointer)?));
+        return Ok(RuntimeExpr::SourceDescriptions(parse_name_path(
+            rest, pointer,
+        )?));
     }
 
     if let Some(rest) = head.strip_prefix("components.parameters.") {
@@ -198,4 +199,3 @@ pub enum RuntimeExprError {
     #[error("json pointer is not allowed on this runtime expression")]
     PointerNotAllowed,
 }
-

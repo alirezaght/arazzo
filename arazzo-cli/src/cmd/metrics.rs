@@ -3,7 +3,7 @@ use serde::Serialize;
 use uuid::Uuid;
 
 use crate::exit_codes;
-use crate::output::{OutputFormat, print_error, print_result};
+use crate::output::{print_error, print_result, OutputFormat};
 use crate::utils::redact_url_password;
 use crate::{OutputArgs, StoreArgs};
 
@@ -41,7 +41,8 @@ pub async fn metrics_cmd(run_id: &str, output: OutputArgs, store: StoreArgs) -> 
         }
     };
 
-    let database_url = match store.store
+    let database_url = match store
+        .store
         .or_else(|| std::env::var("ARAZZO_DATABASE_URL").ok())
         .or_else(|| std::env::var("DATABASE_URL").ok())
     {
@@ -64,11 +65,19 @@ pub async fn metrics_cmd(run_id: &str, output: OutputArgs, store: StoreArgs) -> 
     let run = match pg.get_run(run_uuid).await {
         Ok(Some(r)) => r,
         Ok(None) => {
-            print_error(output.format, output.quiet, &format!("run {} not found", run_uuid));
+            print_error(
+                output.format,
+                output.quiet,
+                &format!("run {} not found", run_uuid),
+            );
             return exit_codes::RUNTIME_ERROR;
         }
         Err(e) => {
-            print_error(output.format, output.quiet, &format!("failed to get run: {e}"));
+            print_error(
+                output.format,
+                output.quiet,
+                &format!("failed to get run: {e}"),
+            );
             return exit_codes::RUNTIME_ERROR;
         }
     };
@@ -76,7 +85,11 @@ pub async fn metrics_cmd(run_id: &str, output: OutputArgs, store: StoreArgs) -> 
     let steps = match pg.get_run_steps(run_uuid).await {
         Ok(s) => s,
         Err(e) => {
-            print_error(output.format, output.quiet, &format!("failed to get steps: {e}"));
+            print_error(
+                output.format,
+                output.quiet,
+                &format!("failed to get steps: {e}"),
+            );
             return exit_codes::RUNTIME_ERROR;
         }
     };
@@ -99,7 +112,11 @@ pub async fn metrics_cmd(run_id: &str, output: OutputArgs, store: StoreArgs) -> 
     let events = match pg.get_events_after(run_uuid, 0, 10000).await {
         Ok(e) => e,
         Err(e) => {
-            print_error(output.format, output.quiet, &format!("failed to get events: {e}"));
+            print_error(
+                output.format,
+                output.quiet,
+                &format!("failed to get events: {e}"),
+            );
             return exit_codes::RUNTIME_ERROR;
         }
     };
@@ -149,11 +166,20 @@ pub async fn metrics_cmd(run_id: &str, output: OutputArgs, store: StoreArgs) -> 
         println!("  Workflow: {}", result.workflow_id);
         println!("  Status: {}", result.status);
         if let Some(duration) = result.duration_ms {
-            println!("  Duration: {}ms ({:.2}s)", duration, duration as f64 / 1000.0);
+            println!(
+                "  Duration: {}ms ({:.2}s)",
+                duration,
+                duration as f64 / 1000.0
+            );
         }
-        println!("  Steps: {}/{} succeeded, {} failed, {} retried", 
-            result.steps.succeeded, result.steps.total, result.steps.failed, result.steps.retried);
-        println!("  HTTP: {} requests, {} errors", result.http.requests, result.http.errors);
+        println!(
+            "  Steps: {}/{} succeeded, {} failed, {} retried",
+            result.steps.succeeded, result.steps.total, result.steps.failed, result.steps.retried
+        );
+        println!(
+            "  HTTP: {} requests, {} errors",
+            result.http.requests, result.http.errors
+        );
         println!("  Policy denials: {}", result.policy_denials);
     } else {
         print_result(output.format, output.quiet, &result);
@@ -161,4 +187,3 @@ pub async fn metrics_cmd(run_id: &str, output: OutputArgs, store: StoreArgs) -> 
 
     exit_codes::SUCCESS
 }
-

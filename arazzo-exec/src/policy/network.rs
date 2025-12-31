@@ -26,13 +26,11 @@ impl Default for NetworkConfig {
     }
 }
 
-#[derive(Debug, Clone)]
-#[derive(Default)]
+#[derive(Debug, Clone, Default)]
 pub struct RedirectPolicy {
     pub follow: bool,
     pub max_redirects: usize,
 }
-
 
 pub(crate) fn host_allowed(allowed_hosts: &BTreeSet<String>, host: &str) -> bool {
     if allowed_hosts.is_empty() {
@@ -42,7 +40,9 @@ pub(crate) fn host_allowed(allowed_hosts: &BTreeSet<String>, host: &str) -> bool
     if allowed_hosts.contains(host) {
         return true;
     }
-    allowed_hosts.iter().any(|h| host.ends_with(&format!(".{h}")))
+    allowed_hosts
+        .iter()
+        .any(|h| host.ends_with(&format!(".{h}")))
 }
 
 pub(crate) fn is_private_ip_literal(host: &str) -> bool {
@@ -75,11 +75,12 @@ pub(crate) fn is_private_ip_literal(host: &str) -> bool {
             }
             std::net::IpAddr::V6(v6) => {
                 // ::1 loopback, fe80::/10 link-local, fc00::/7 unique local.
-                v6.is_loopback() || v6.is_unicast_link_local() || v6.segments()[0] & 0xfe00 == 0xfc00
+                v6.is_loopback()
+                    || (v6.segments()[0] & 0xffc0 == 0xfe80) // fe80::/10 link-local
+                    || v6.segments()[0] & 0xfe00 == 0xfc00
             }
         }
     } else {
         false
     }
 }
-

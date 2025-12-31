@@ -25,8 +25,8 @@ workflows:
 "#;
     let f = write_temp(doc);
 
-    let bin = assert_cmd::cargo::cargo_bin!("arazzo-cli");
-    Command::new(bin)
+    Command::cargo_bin("arazzo-cli")
+        .unwrap()
         .args(["validate", f.path().to_string_lossy().as_ref()])
         .assert()
         .success();
@@ -50,8 +50,8 @@ workflows:
 "#;
     let f = write_temp(doc);
 
-    let bin = assert_cmd::cargo::cargo_bin!("arazzo-cli");
-    Command::new(bin)
+    Command::cargo_bin("arazzo-cli")
+        .unwrap()
         .args(["validate", f.path().to_string_lossy().as_ref()])
         .assert()
         .code(2); // VALIDATION_FAILED
@@ -75,8 +75,8 @@ workflows:
 "#;
     let f = write_temp(doc);
 
-    let bin = assert_cmd::cargo::cargo_bin!("arazzo-cli");
-    Command::new(bin)
+    Command::cargo_bin("arazzo-cli")
+        .unwrap()
         .args([
             "plan",
             f.path().to_string_lossy().as_ref(),
@@ -144,8 +144,8 @@ workflows:
     );
     let arazzo_file = write_temp(&arazzo);
 
-    let bin = assert_cmd::cargo::cargo_bin!("arazzo-cli");
-    Command::new(bin)
+    Command::cargo_bin("arazzo-cli")
+        .unwrap()
         .args([
             "plan",
             arazzo_file.path().to_string_lossy().as_ref(),
@@ -158,4 +158,3 @@ workflows:
         .assert()
         .success();
 }
-

@@ -78,4 +78,3 @@ async fn concurrency_limits_combine_global_and_per_source() {
     drop(permit3);
     drop(permit4);
 }
-

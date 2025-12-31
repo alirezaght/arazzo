@@ -28,4 +28,3 @@ pub enum RefError {
     #[error("cyclic $ref: {0}")]
     Cycle(String),
 }
-

@@ -29,7 +29,11 @@ impl SecretRef {
         if id.is_empty() {
             return Err(SecretRefParseError::EmptyId);
         }
-        Ok(Self { scheme: scheme.to_string(), id, query })
+        Ok(Self {
+            scheme: scheme.to_string(),
+            id,
+            query,
+        })
     }
 
     pub fn as_uri_string(&self) -> String {
@@ -71,4 +75,3 @@ pub enum SecretRefParseError {
     #[error("secret reference id must not be empty")]
     EmptyId,
 }
-

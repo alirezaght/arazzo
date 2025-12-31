@@ -50,7 +50,9 @@ pub struct OpenApiParam {
     pub required: bool,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, serde::Serialize, serde::Deserialize)]
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, serde::Serialize, serde::Deserialize,
+)]
 #[serde(rename_all = "lowercase")]
 pub enum OpenApiParamLocation {
     Path,
@@ -152,4 +154,3 @@ fn location_rank(loc: OpenApiParamLocation) -> u8 {
         OpenApiParamLocation::Cookie => 3,
     }
 }
-

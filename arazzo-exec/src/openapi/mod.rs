@@ -1,14 +1,13 @@
-mod model;
-mod resolver;
-mod refs;
 mod loader;
+mod model;
 mod op_id;
 pub mod op_path;
+mod refs;
+mod resolver;
 mod shape;
 
 pub use model::{
-    CompiledOperationShape, OpenApiDiagnostic, OpenApiDoc, OpenApiParam, OpenApiParamLocation,
-    ResolvedOperation, DiagnosticSeverity,
+    CompiledOperationShape, DiagnosticSeverity, OpenApiDiagnostic, OpenApiDoc, OpenApiParam,
+    OpenApiParamLocation, ResolvedOperation,
 };
 pub use resolver::{OpenApiResolver, ResolvedSources};
-

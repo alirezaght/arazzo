@@ -99,7 +99,11 @@ async fn caching_provider_enforces_max_entries() {
     let _ = cache.get(&ref3).await.unwrap();
 
     let v1_again = cache.get(&ref1).await.unwrap();
-    assert_ne!(v1_again.expose_bytes(), v1.expose_bytes(), "ref1 should have been evicted and get a new value");
+    assert_ne!(
+        v1_again.expose_bytes(),
+        v1.expose_bytes(),
+        "ref1 should have been evicted and get a new value"
+    );
 }
 
 #[tokio::test]
@@ -121,11 +125,7 @@ async fn caching_provider_single_flight() {
         query: None,
     };
 
-    let (v1, v2) = tokio::join!(
-        cache.get(&secret_ref),
-        cache.get(&secret_ref)
-    );
+    let (v1, v2) = tokio::join!(cache.get(&secret_ref), cache.get(&secret_ref));
 
     assert_eq!(v1.unwrap().expose_bytes(), v2.unwrap().expose_bytes());
 }
-

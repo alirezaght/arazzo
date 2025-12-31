@@ -3,7 +3,7 @@ use serde::Serialize;
 use uuid::Uuid;
 
 use crate::exit_codes;
-use crate::output::{OutputFormat, print_error, print_result};
+use crate::output::{print_error, print_result, OutputFormat};
 use crate::utils::redact_url_password;
 use crate::{OutputArgs, StoreArgs};
 
@@ -24,7 +24,8 @@ pub async fn cancel_cmd(run_id: &str, output: OutputArgs, store: StoreArgs) -> i
         }
     };
 
-    let database_url = match store.store
+    let database_url = match store
+        .store
         .or_else(|| std::env::var("ARAZZO_DATABASE_URL").ok())
         .or_else(|| std::env::var("DATABASE_URL").ok())
     {
@@ -51,7 +52,14 @@ pub async fn cancel_cmd(run_id: &str, output: OutputArgs, store: StoreArgs) -> i
             return exit_codes::RUNTIME_ERROR;
         }
         Err(e) => {
-            print_error(output.format, output.quiet, &format!("failed to get run {}: {e}. Run may not exist or database error occurred.", run_uuid));
+            print_error(
+                output.format,
+                output.quiet,
+                &format!(
+                    "failed to get run {}: {e}. Run may not exist or database error occurred.",
+                    run_uuid
+                ),
+            );
             return exit_codes::RUNTIME_ERROR;
         }
     };
@@ -73,12 +81,20 @@ pub async fn cancel_cmd(run_id: &str, output: OutputArgs, store: StoreArgs) -> i
     }
 
     if previous_status == "succeeded" || previous_status == "failed" {
-        print_error(output.format, output.quiet, &format!("run already in terminal state: {previous_status}"));
+        print_error(
+            output.format,
+            output.quiet,
+            &format!("run already in terminal state: {previous_status}"),
+        );
         return exit_codes::RUNTIME_ERROR;
     }
 
     if let Err(e) = pg.mark_run_finished(run_uuid, "canceled", None).await {
-        print_error(output.format, output.quiet, &format!("failed to cancel run: {e}"));
+        print_error(
+            output.format,
+            output.quiet,
+            &format!("failed to cancel run: {e}"),
+        );
         return exit_codes::RUNTIME_ERROR;
     }
 
@@ -96,4 +112,3 @@ pub async fn cancel_cmd(run_id: &str, output: OutputArgs, store: StoreArgs) -> i
 
     exit_codes::SUCCESS
 }
-

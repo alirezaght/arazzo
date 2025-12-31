@@ -1,9 +1,9 @@
 use serde::Serialize;
 
-use arazzo_store::{PostgresStore, run_migrations};
+use arazzo_store::{run_migrations, PostgresStore};
 
 use crate::exit_codes;
-use crate::output::{OutputFormat, print_error, print_result};
+use crate::output::{print_error, print_result, OutputFormat};
 use crate::{OutputArgs, StoreArgs};
 
 #[derive(Serialize)]
@@ -13,13 +13,18 @@ struct MigrateResult {
 }
 
 pub async fn migrate_cmd(store: StoreArgs, max_connections: u32, output: OutputArgs) -> i32 {
-    let database_url = match store.store
+    let database_url = match store
+        .store
         .or_else(|| std::env::var("ARAZZO_DATABASE_URL").ok())
         .or_else(|| std::env::var("DATABASE_URL").ok())
     {
         Some(v) => v,
         None => {
-            print_error(output.format, output.quiet, "missing database url (use --store or set ARAZZO_DATABASE_URL / DATABASE_URL)");
+            print_error(
+                output.format,
+                output.quiet,
+                "missing database url (use --store or set ARAZZO_DATABASE_URL / DATABASE_URL)",
+            );
             return exit_codes::RUNTIME_ERROR;
         }
     };
@@ -27,7 +32,11 @@ pub async fn migrate_cmd(store: StoreArgs, max_connections: u32, output: OutputA
     let pg = match PostgresStore::connect(&database_url, max_connections).await {
         Ok(s) => s,
         Err(e) => {
-            print_error(output.format, output.quiet, &format!("failed to connect to postgres: {e}"));
+            print_error(
+                output.format,
+                output.quiet,
+                &format!("failed to connect to postgres: {e}"),
+            );
             return exit_codes::RUNTIME_ERROR;
         }
     };
@@ -46,7 +55,11 @@ pub async fn migrate_cmd(store: StoreArgs, max_connections: u32, output: OutputA
             exit_codes::SUCCESS
         }
         Err(e) => {
-            print_error(output.format, output.quiet, &format!("migration failed: {e}"));
+            print_error(
+                output.format,
+                output.quiet,
+                &format!("migration failed: {e}"),
+            );
             exit_codes::RUNTIME_ERROR
         }
     }

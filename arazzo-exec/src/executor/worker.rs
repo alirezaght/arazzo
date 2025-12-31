@@ -18,9 +18,17 @@ use crate::secrets::SecretsProvider;
 
 #[derive(Debug)]
 pub enum StepResult {
-    Succeeded { outputs: serde_json::Value },
-    Retry { delay_ms: i64, error: serde_json::Value },
-    Failed { error: serde_json::Value, end_run: bool },
+    Succeeded {
+        outputs: serde_json::Value,
+    },
+    Retry {
+        delay_ms: i64,
+        error: serde_json::Value,
+    },
+    Failed {
+        error: serde_json::Value,
+        end_run: bool,
+    },
 }
 
 pub struct Worker<'a> {
@@ -32,6 +40,7 @@ pub struct Worker<'a> {
     pub event_sink: &'a dyn crate::executor::EventSink,
 }
 
+#[allow(clippy::too_many_arguments)]
 pub async fn execute_step_attempt(
     worker: &Worker<'_>,
     run_id: Uuid,
@@ -43,7 +52,9 @@ pub async fn execute_step_attempt(
     inputs: &serde_json::Value,
     document: Option<&ArazzoDocument>,
 ) -> StepResult {
-    let eff_policy = worker.policy_gate.effective_for_source(source_name, &PolicyOverrides::default());
+    let eff_policy = worker
+        .policy_gate
+        .effective_for_source(source_name, &PolicyOverrides::default());
     let secrets_policy = SecretsPolicyForSource {
         allow_secrets_in_url: eff_policy.allow_secrets_in_url,
     };
@@ -100,32 +111,48 @@ pub async fn execute_step_attempt(
         }
     };
 
-    worker.event_sink.emit(crate::executor::Event::AttemptStarted {
-        run_id,
-        step_id: step.step_id.clone(),
-        attempt_no,
-    }).await;
+    worker
+        .event_sink
+        .emit(crate::executor::Event::AttemptStarted {
+            run_id,
+            step_id: step.step_id.clone(),
+            attempt_no,
+        })
+        .await;
 
     let timeout = Duration::from_secs(30);
     let max_response_bytes = 4 * 1024 * 1024;
 
-    let sent = worker.http.send(req_parts, timeout, max_response_bytes).await;
+    let sent = worker
+        .http
+        .send(req_parts, timeout, max_response_bytes)
+        .await;
 
     match sent {
         Ok(resp) => {
-            let resp_sanitized = match worker
-                .policy_gate
-                .apply_response(source_name, &resp, &secret_derived_headers)
-            {
-                Ok(s) => s,
-                Err(e) => {
-                    finish_attempt_failed(worker.store, worker.event_sink, run_id, &step.step_id, attempt_id, attempt_no, &e.to_string()).await;
-                    return StepResult::Failed {
-                        error: json!({"type":"policy","message":e.to_string()}),
-                        end_run: true,
-                    };
-                }
-            };
+            let resp_sanitized =
+                match worker
+                    .policy_gate
+                    .apply_response(source_name, &resp, &secret_derived_headers)
+                {
+                    Ok(s) => s,
+                    Err(e) => {
+                        finish_attempt_failed(
+                            worker.store,
+                            worker.event_sink,
+                            run_id,
+                            &step.step_id,
+                            attempt_id,
+                            attempt_no,
+                            &e.to_string(),
+                        )
+                        .await;
+                        return StepResult::Failed {
+                            error: json!({"type":"policy","message":e.to_string()}),
+                            end_run: true,
+                        };
+                    }
+                };
 
             let resp_json = response_to_json(&resp_sanitized);
             let body_json = parse_body_json(&resp);
@@ -140,7 +167,14 @@ pub async fn execute_step_attempt(
                 let outputs = compute_outputs(worker.store, run_id, inputs, step, &resp_ctx).await;
                 let _ = worker
                     .store
-                    .finish_attempt(attempt_id, AttemptStatus::Succeeded, resp_json, None, None, None)
+                    .finish_attempt(
+                        attempt_id,
+                        AttemptStatus::Succeeded,
+                        resp_json,
+                        None,
+                        None,
+                        None,
+                    )
                     .await;
                 StepResult::Succeeded { outputs }
             } else {
@@ -170,18 +204,29 @@ pub async fn execute_step_attempt(
                     None,
                 )
                 .await;
-            worker.event_sink.emit(crate::executor::Event::AttemptFinished {
-                run_id,
-                step_id: step.step_id.clone(),
-                attempt_no,
-                succeeded: false,
-            }).await;
+            worker
+                .event_sink
+                .emit(crate::executor::Event::AttemptFinished {
+                    run_id,
+                    step_id: step.step_id.clone(),
+                    attempt_no,
+                    succeeded: false,
+                })
+                .await;
             decide_network_failure(worker.retry, step, attempt_no as usize, &err)
         }
     }
 }
 
-async fn finish_attempt_failed(store: &dyn StateStore, event_sink: &dyn crate::executor::EventSink, run_id: Uuid, step_id: &str, attempt_id: Uuid, attempt_no: i32, msg: &str) {
+async fn finish_attempt_failed(
+    store: &dyn StateStore,
+    event_sink: &dyn crate::executor::EventSink,
+    run_id: Uuid,
+    step_id: &str,
+    attempt_id: Uuid,
+    attempt_no: i32,
+    msg: &str,
+) {
     let _ = store
         .finish_attempt(
             attempt_id,
@@ -192,10 +237,12 @@ async fn finish_attempt_failed(store: &dyn StateStore, event_sink: &dyn crate::e
             None,
         )
         .await;
-    event_sink.emit(crate::executor::Event::AttemptFinished {
-        run_id,
-        step_id: step_id.to_string(),
-        attempt_no,
-        succeeded: false,
-    }).await;
+    event_sink
+        .emit(crate::executor::Event::AttemptFinished {
+            run_id,
+            step_id: step_id.to_string(),
+            attempt_no,
+            succeeded: false,
+        })
+        .await;
 }

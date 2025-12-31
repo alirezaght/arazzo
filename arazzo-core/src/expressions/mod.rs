@@ -3,8 +3,8 @@ mod runtime;
 mod template;
 
 pub use json_pointer::{JsonPointer, JsonPointerError};
-pub use runtime::{RuntimeExpr, RuntimeExprError, Source, parse_runtime_expr};
-pub use template::{Segment, Template, TemplateError, parse_template};
+pub use runtime::{parse_runtime_expr, RuntimeExpr, RuntimeExprError, Source};
+pub use template::{parse_template, Segment, Template, TemplateError};
 
 use crate::types::AnyValue;
 
@@ -15,4 +15,3 @@ use crate::types::AnyValue;
 pub fn validate_value_expressions(value: &AnyValue) -> Result<(), TemplateError> {
     template::validate_value_expressions(value)
 }
-

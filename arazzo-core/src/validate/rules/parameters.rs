@@ -69,4 +69,3 @@ pub(crate) fn validate_parameter_list(
         }
     }
 }
-

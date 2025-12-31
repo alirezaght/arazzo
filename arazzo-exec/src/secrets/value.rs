@@ -26,4 +26,3 @@ impl std::fmt::Debug for SecretValue {
         f.write_str("SecretValue(<redacted>)")
     }
 }
-

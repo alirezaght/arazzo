@@ -4,7 +4,7 @@ mod model;
 mod scan;
 
 use crate::error::ParseError;
-use crate::parser::{DocumentFormat, parse_document_str};
+use crate::parser::{parse_document_str, DocumentFormat};
 use crate::types::{ArazzoDocument, Workflow};
 use crate::validate::validate_document;
 
@@ -14,15 +14,13 @@ pub use model::{
     ValidationSummary,
 };
 
-#[derive(Debug, Clone)]
-#[derive(Default)]
+#[derive(Debug, Clone, Default)]
 pub struct PlanOptions {
     /// Which workflow to plan. Required when the document has multiple workflows.
     pub workflow_id: Option<String>,
     /// Optional inputs JSON (used to report missing inputs and pre-validate templates).
     pub inputs: Option<serde_json::Value>,
 }
-
 
 pub fn plan_from_str(
     input: &str,
@@ -33,7 +31,10 @@ pub fn plan_from_str(
     plan_document(&parsed.document, options)
 }
 
-pub fn plan_document(doc: &ArazzoDocument, options: PlanOptions) -> Result<PlanningOutcome, PlannerError> {
+pub fn plan_document(
+    doc: &ArazzoDocument,
+    options: PlanOptions,
+) -> Result<PlanningOutcome, PlannerError> {
     let validation = match validate_document(doc) {
         Ok(()) => ValidationSummary::valid(),
         Err(e) => ValidationSummary::invalid_from(e),
@@ -151,4 +152,3 @@ pub enum PlannerError {
     #[error("unable to build dependency graph: {0}")]
     DependencyGraph(String),
 }
-

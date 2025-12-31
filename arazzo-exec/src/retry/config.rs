@@ -24,13 +24,11 @@ impl Default for RetryConfig {
     }
 }
 
-#[derive(Debug, Clone)]
-#[derive(Default)]
+#[derive(Debug, Clone, Default)]
 pub struct RetryHeadersConfig {
     /// Vendor-specific retry-after headers (per source, configurable later).
     pub vendor_headers: Vec<RetryVendorHeader>,
 }
-
 
 #[derive(Debug, Clone)]
 pub struct RetryVendorHeader {
@@ -47,4 +45,3 @@ pub enum VendorHeaderKind {
     /// HTTP-date
     HttpDate,
 }
-

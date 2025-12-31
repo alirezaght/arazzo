@@ -16,7 +16,12 @@ pub async fn append_event(pool: &PgPool, event: NewEvent) -> Result<(), StoreErr
     Ok(())
 }
 
-pub async fn get_events_after(pool: &PgPool, run_id: Uuid, after_id: i64, limit: i64) -> Result<Vec<RunEvent>, StoreError> {
+pub async fn get_events_after(
+    pool: &PgPool,
+    run_id: Uuid,
+    after_id: i64,
+    limit: i64,
+) -> Result<Vec<RunEvent>, StoreError> {
     let rows = sqlx::query_as::<_, RunEvent>(
         r#"
 SELECT id, run_id, run_step_id, ts, type as event_type, payload
@@ -31,7 +36,10 @@ FROM run_events WHERE run_id = $1 AND id > $2 ORDER BY id LIMIT $3
     Ok(rows)
 }
 
-pub async fn upsert_workflow_doc(pool: &PgPool, doc: NewWorkflowDoc) -> Result<WorkflowDoc, StoreError> {
+pub async fn upsert_workflow_doc(
+    pool: &PgPool,
+    doc: NewWorkflowDoc,
+) -> Result<WorkflowDoc, StoreError> {
     let rec = sqlx::query_as::<_, WorkflowDoc>(
         r#"
 INSERT INTO workflow_docs (doc_hash, format, raw, doc)
@@ -59,4 +67,3 @@ pub async fn get_workflow_doc(pool: &PgPool, id: Uuid) -> Result<Option<Workflow
     .await?;
     Ok(rec)
 }
-

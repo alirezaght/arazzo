@@ -1,13 +1,13 @@
 use std::sync::Arc;
 
-use arazzo_core::{DocumentFormat, PlanOptions, parse_document_str, plan_document};
+use arazzo_core::{parse_document_str, plan_document, DocumentFormat, PlanOptions};
 #[allow(unused_imports)]
 use arazzo_store::StateStore;
 use serde::Serialize;
 use uuid::Uuid;
 
 use crate::exit_codes;
-use crate::output::{OutputFormat, print_error, print_result};
+use crate::output::{print_error, print_result, OutputFormat};
 use crate::{ConcurrencyArgs, OutputArgs, PolicyArgs, RetryArgs, SecretsArgs, StoreArgs};
 
 use super::config::{build_executor_config, build_policy_config, get_database_url};
@@ -63,7 +63,14 @@ pub async fn resume_cmd(
             return exit_codes::RUNTIME_ERROR;
         }
         Err(e) => {
-            print_error(output.format, output.quiet, &format!("failed to get run {}: {e}. Run may not exist or database error occurred.", run_uuid));
+            print_error(
+                output.format,
+                output.quiet,
+                &format!(
+                    "failed to get run {}: {e}. Run may not exist or database error occurred.",
+                    run_uuid
+                ),
+            );
             return exit_codes::RUNTIME_ERROR;
         }
     };
@@ -91,7 +98,11 @@ pub async fn resume_cmd(
             return exit_codes::RUNTIME_ERROR;
         }
         Err(e) => {
-            print_error(output.format, output.quiet, &format!("failed to get workflow doc: {e}"));
+            print_error(
+                output.format,
+                output.quiet,
+                &format!("failed to get workflow doc: {e}"),
+            );
             return exit_codes::RUNTIME_ERROR;
         }
     };
@@ -103,7 +114,11 @@ pub async fn resume_cmd(
     let parsed = match parse_document_str(&workflow_doc.raw, format) {
         Ok(p) => p,
         Err(e) => {
-            print_error(output.format, output.quiet, &format!("failed to parse workflow: {e}"));
+            print_error(
+                output.format,
+                output.quiet,
+                &format!("failed to parse workflow: {e}"),
+            );
             return exit_codes::RUNTIME_ERROR;
         }
     };
@@ -114,10 +129,13 @@ pub async fn resume_cmd(
         Some(run.inputs.clone())
     };
 
-    let outcome = match plan_document(&parsed.document, PlanOptions {
-        workflow_id: Some(run.workflow_id.clone()),
-        inputs: inputs.clone(),
-    }) {
+    let outcome = match plan_document(
+        &parsed.document,
+        PlanOptions {
+            workflow_id: Some(run.workflow_id.clone()),
+            inputs: inputs.clone(),
+        },
+    ) {
         Ok(o) => o,
         Err(e) => {
             print_error(output.format, output.quiet, &format!("failed to plan: {e}"));
@@ -138,16 +156,31 @@ pub async fn resume_cmd(
         }
     };
 
-    let wf = match parsed.document.workflows.iter().find(|w| w.workflow_id == plan.summary.workflow_id) {
+    let wf = match parsed
+        .document
+        .workflows
+        .iter()
+        .find(|w| w.workflow_id == plan.summary.workflow_id)
+    {
         Some(w) => w,
         None => {
-            print_error(output.format, output.quiet, "workflow not found in document");
+            print_error(
+                output.format,
+                output.quiet,
+                "workflow not found in document",
+            );
             return exit_codes::VALIDATION_FAILED;
         }
     };
 
-    let compiled = arazzo_exec::Compiler::default().compile_workflow(&parsed.document, wf).await;
-    if compiled.diagnostics.iter().any(|d| d.severity == arazzo_exec::openapi::DiagnosticSeverity::Error) {
+    let compiled = arazzo_exec::Compiler::default()
+        .compile_workflow(&parsed.document, wf)
+        .await;
+    if compiled
+        .diagnostics
+        .iter()
+        .any(|d| d.severity == arazzo_exec::openapi::DiagnosticSeverity::Error)
+    {
         print_error(output.format, output.quiet, "OpenAPI compilation failed");
         return exit_codes::VALIDATION_FAILED;
     }
@@ -155,14 +188,22 @@ pub async fn resume_cmd(
     let exec_config = build_executor_config(&concurrency, &retry);
     let secrets_provider: Arc<dyn arazzo_exec::secrets::SecretsProvider> =
         Arc::new(arazzo_exec::secrets::EnvSecretsProvider::default());
-    let policy_gate = Arc::new(arazzo_exec::policy::PolicyGate::new(build_policy_config(&policy)));
+    let policy_gate = Arc::new(arazzo_exec::policy::PolicyGate::new(build_policy_config(
+        &policy,
+    )));
     let http_client: Arc<dyn arazzo_exec::executor::HttpClient> =
         Arc::new(arazzo_exec::executor::http::ReqwestHttpClient::default());
-    let event_sink: Arc<dyn arazzo_exec::executor::EventSink> =
-        Arc::new(arazzo_exec::executor::StoreEventSink::new(store_arc.clone()));
+    let event_sink: Arc<dyn arazzo_exec::executor::EventSink> = Arc::new(
+        arazzo_exec::executor::StoreEventSink::new(store_arc.clone()),
+    );
 
     let executor = arazzo_exec::Executor::new(
-        exec_config, store_arc.clone(), http_client, secrets_provider, policy_gate, event_sink,
+        exec_config,
+        store_arc.clone(),
+        http_client,
+        secrets_provider,
+        policy_gate,
+        event_sink,
     );
 
     let run_inputs = inputs.unwrap_or(serde_json::json!({}));
@@ -175,7 +216,11 @@ pub async fn resume_cmd(
             }
         }
         Err(e) => {
-            print_error(output.format, output.quiet, &format!("failed to reset stale steps: {e}"));
+            print_error(
+                output.format,
+                output.quiet,
+                &format!("failed to reset stale steps: {e}"),
+            );
             return exit_codes::RUNTIME_ERROR;
         }
         _ => {}
@@ -185,7 +230,9 @@ pub async fn resume_cmd(
         println!("Resuming run {}...", run_uuid);
     }
 
-    let result = executor.execute_run(run_uuid, wf, &compiled, &run_inputs, Some(&parsed.document)).await;
+    let result = executor
+        .execute_run(run_uuid, wf, &compiled, &run_inputs, Some(&parsed.document))
+        .await;
 
     match result {
         Ok(exec_result) => {
@@ -203,7 +250,11 @@ pub async fn resume_cmd(
             } else {
                 print_result(output.format, output.quiet, &res);
             }
-            if res.steps_failed > 0 { exit_codes::RUN_FAILED } else { exit_codes::SUCCESS }
+            if res.steps_failed > 0 {
+                exit_codes::RUN_FAILED
+            } else {
+                exit_codes::SUCCESS
+            }
         }
         Err(e) => {
             let res = ResumeResult {

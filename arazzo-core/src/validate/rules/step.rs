@@ -2,8 +2,7 @@ use crate::types::Step;
 use crate::validate::rules::{
     actions,
     common::{validate_map_keys, validate_runtime_expr, validate_template_string},
-    criteria,
-    parameters,
+    criteria, parameters,
 };
 use crate::validate::validator::Validator;
 
@@ -67,7 +66,11 @@ pub(crate) fn validate_step(
         let rb_path = format!("{path}.requestBody");
         v.validate_extensions(&rb_path, &rb.extensions);
         if let Some(payload) = &rb.payload {
-            crate::validate::rules::common::validate_value_exprs(v, &format!("{rb_path}.payload"), payload);
+            crate::validate::rules::common::validate_value_exprs(
+                v,
+                &format!("{rb_path}.payload"),
+                payload,
+            );
         }
         if let Some(replacements) = &rb.replacements {
             for (ridx, rep) in replacements.iter().enumerate() {
@@ -76,7 +79,11 @@ pub(crate) fn validate_step(
                 if rep.target.trim().is_empty() {
                     v.push(format!("{rpath}.target"), "must not be empty");
                 }
-                crate::validate::rules::common::validate_value_exprs(v, &format!("{rpath}.value"), &rep.value);
+                crate::validate::rules::common::validate_value_exprs(
+                    v,
+                    &format!("{rpath}.value"),
+                    &rep.value,
+                );
             }
         }
     }
@@ -85,10 +92,19 @@ pub(crate) fn validate_step(
         criteria::validate_criteria_list(v, &format!("{path}.successCriteria"), success_criteria);
     }
     if let Some(on_success) = &step.on_success {
-        actions::validate_success_action_list(v, &format!("{path}.onSuccess"), on_success, Some(step_ids));
+        actions::validate_success_action_list(
+            v,
+            &format!("{path}.onSuccess"),
+            on_success,
+            Some(step_ids),
+        );
     }
     if let Some(on_failure) = &step.on_failure {
-        actions::validate_failure_action_list(v, &format!("{path}.onFailure"), on_failure, Some(step_ids));
+        actions::validate_failure_action_list(
+            v,
+            &format!("{path}.onFailure"),
+            on_failure,
+            Some(step_ids),
+        );
     }
 }
-

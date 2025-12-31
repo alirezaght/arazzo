@@ -1,13 +1,11 @@
 use std::time::Duration;
 
-#[derive(Debug, Clone)]
-#[derive(Default)]
+#[derive(Debug, Clone, Default)]
 pub struct LimitsConfig {
     pub request: RequestLimits,
     pub response: ResponseLimits,
     pub run: RunLimitsConfig,
 }
-
 
 #[derive(Debug, Clone)]
 pub struct RequestLimits {
@@ -19,9 +17,9 @@ pub struct RequestLimits {
 impl Default for RequestLimits {
     fn default() -> Self {
         Self {
-            max_body_bytes: 1024 * 1024,      // 1MB
+            max_body_bytes: 1024 * 1024, // 1MB
             max_headers_count: 100,
-            max_headers_bytes: 16 * 1024,     // 16KB
+            max_headers_bytes: 16 * 1024, // 16KB
         }
     }
 }
@@ -38,7 +36,7 @@ impl Default for ResponseLimits {
         Self {
             max_body_bytes: 4 * 1024 * 1024, // 4MB
             max_headers_count: 100,
-            max_headers_bytes: 32 * 1024,    // 32KB
+            max_headers_bytes: 32 * 1024, // 32KB
         }
     }
 }
@@ -59,4 +57,3 @@ impl Default for RunLimitsConfig {
         }
     }
 }
-

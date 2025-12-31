@@ -1,4 +1,4 @@
-use arazzo_core::expressions::{RuntimeExpr, Source, parse_runtime_expr};
+use arazzo_core::expressions::{parse_runtime_expr, RuntimeExpr, Source};
 use arazzo_core::types::{Criterion, CriterionType, KnownCriterionType};
 use regex::Regex;
 use serde_json::Value as JsonValue;
@@ -22,7 +22,9 @@ fn evaluate_criterion(c: &Criterion, resp: &ResponseContext<'_>) -> bool {
     let criterion_type = c.r#type.as_ref().map(|t| match t {
         CriterionType::Known(k) => k.clone(),
         CriterionType::Custom(custom) => match custom.r#type {
-            arazzo_core::types::CriterionExpressionLanguage::Jsonpath => KnownCriterionType::Jsonpath,
+            arazzo_core::types::CriterionExpressionLanguage::Jsonpath => {
+                KnownCriterionType::Jsonpath
+            }
             arazzo_core::types::CriterionExpressionLanguage::Xpath => KnownCriterionType::Xpath,
         },
     });
@@ -120,7 +122,9 @@ fn evaluate_regex(c: &Criterion, resp: &ResponseContext<'_>) -> bool {
     };
 
     let pattern = c.condition.trim();
-    Regex::new(pattern).map(|re| re.is_match(&context_str)).unwrap_or(false)
+    Regex::new(pattern)
+        .map(|re| re.is_match(&context_str))
+        .unwrap_or(false)
 }
 
 /// Resolve an Arazzo runtime expression to a JSON value (sync, for criteria evaluation)
@@ -134,7 +138,9 @@ fn resolve_runtime_expr(expr: &str, resp: &ResponseContext<'_>) -> JsonValue {
         RuntimeExpr::StatusCode => JsonValue::Number(resp.status.into()),
         RuntimeExpr::Response(source) => match source {
             Source::Header(h) => {
-                let v = resp.headers.iter()
+                let v = resp
+                    .headers
+                    .iter()
                     .find(|(k, _)| k.eq_ignore_ascii_case(&h))
                     .map(|(_, v)| v.clone())
                     .unwrap_or_default();
@@ -146,7 +152,10 @@ fn resolve_runtime_expr(expr: &str, resp: &ResponseContext<'_>) -> JsonValue {
                     None => return JsonValue::Null,
                 };
                 match pointer {
-                    Some(ptr) => json.pointer(ptr.as_str()).cloned().unwrap_or(JsonValue::Null),
+                    Some(ptr) => json
+                        .pointer(ptr.as_str())
+                        .cloned()
+                        .unwrap_or(JsonValue::Null),
                     None => json,
                 }
             }
@@ -170,9 +179,15 @@ fn parse_literal(s: &str) -> JsonValue {
     }
 
     // Boolean
-    if s == "true" { return JsonValue::Bool(true); }
-    if s == "false" { return JsonValue::Bool(false); }
-    if s == "null" { return JsonValue::Null; }
+    if s == "true" {
+        return JsonValue::Bool(true);
+    }
+    if s == "false" {
+        return JsonValue::Bool(false);
+    }
+    if s == "null" {
+        return JsonValue::Null;
+    }
 
     // Number
     if let Ok(n) = s.parse::<i64>() {
@@ -191,10 +206,18 @@ fn compare_values(actual: &JsonValue, expected: &JsonValue, op: &str) -> bool {
     match op {
         "==" => json_eq(actual, expected),
         "!=" => !json_eq(actual, expected),
-        "<" => json_cmp(actual, expected).map(|o| o.is_lt()).unwrap_or(false),
-        ">" => json_cmp(actual, expected).map(|o| o.is_gt()).unwrap_or(false),
-        "<=" => json_cmp(actual, expected).map(|o| o.is_le()).unwrap_or(false),
-        ">=" => json_cmp(actual, expected).map(|o| o.is_ge()).unwrap_or(false),
+        "<" => json_cmp(actual, expected)
+            .map(|o| o.is_lt())
+            .unwrap_or(false),
+        ">" => json_cmp(actual, expected)
+            .map(|o| o.is_gt())
+            .unwrap_or(false),
+        "<=" => json_cmp(actual, expected)
+            .map(|o| o.is_le())
+            .unwrap_or(false),
+        ">=" => json_cmp(actual, expected)
+            .map(|o| o.is_ge())
+            .unwrap_or(false),
         _ => false,
     }
 }
@@ -209,7 +232,9 @@ fn json_eq(a: &JsonValue, b: &JsonValue) -> bool {
             a.len() == b.len() && a.iter().zip(b.iter()).all(|(x, y)| json_eq(x, y))
         }
         (JsonValue::Object(a), JsonValue::Object(b)) => {
-            a.len() == b.len() && a.iter().all(|(k, v)| b.get(k).map(|bv| json_eq(v, bv)).unwrap_or(false))
+            a.len() == b.len()
+                && a.iter()
+                    .all(|(k, v)| b.get(k).map(|bv| json_eq(v, bv)).unwrap_or(false))
         }
         _ => false,
     }
@@ -295,7 +320,10 @@ mod tests {
             r#type: Some(CriterionType::Known(KnownCriterionType::Jsonpath)),
             extensions: Default::default(),
         };
-        assert!(evaluate_criterion(&c, &resp), "filter existence check should pass");
+        assert!(
+            evaluate_criterion(&c, &resp),
+            "filter existence check should pass"
+        );
     }
 
     #[test]
@@ -307,7 +335,10 @@ mod tests {
             r#type: Some(CriterionType::Known(KnownCriterionType::Jsonpath)),
             extensions: Default::default(),
         };
-        assert!(evaluate_criterion(&c, &resp), "filter comparison should pass");
+        assert!(
+            evaluate_criterion(&c, &resp),
+            "filter comparison should pass"
+        );
     }
 
     #[test]
@@ -319,7 +350,10 @@ mod tests {
             r#type: Some(CriterionType::Known(KnownCriterionType::Jsonpath)),
             extensions: Default::default(),
         };
-        assert!(!evaluate_criterion(&c, &resp), "filter should fail when field missing");
+        assert!(
+            !evaluate_criterion(&c, &resp),
+            "filter should fail when field missing"
+        );
     }
 
     #[test]
@@ -331,6 +365,9 @@ mod tests {
             r#type: Some(CriterionType::Known(KnownCriterionType::Jsonpath)),
             extensions: Default::default(),
         };
-        assert!(evaluate_criterion(&c, &resp), "bracket notation should work");
+        assert!(
+            evaluate_criterion(&c, &resp),
+            "bracket notation should work"
+        );
     }
 }

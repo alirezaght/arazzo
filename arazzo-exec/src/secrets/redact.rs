@@ -57,4 +57,3 @@ fn remove_case_insensitive(map: &mut BTreeMap<String, String>, header: &str, rep
         map.insert(k, replacement.to_string());
     }
 }
-

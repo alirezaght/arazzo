@@ -144,31 +144,54 @@ impl arazzo_store::StateStore for MockStore {
         Ok(())
     }
 
-    async fn append_event(&self, _event: arazzo_store::NewEvent) -> Result<(), arazzo_store::StoreError> {
+    async fn append_event(
+        &self,
+        _event: arazzo_store::NewEvent,
+    ) -> Result<(), arazzo_store::StoreError> {
         Ok(())
     }
 
-    async fn get_run(&self, _run_id: uuid::Uuid) -> Result<Option<arazzo_store::WorkflowRun>, arazzo_store::StoreError> {
+    async fn get_run(
+        &self,
+        _run_id: uuid::Uuid,
+    ) -> Result<Option<arazzo_store::WorkflowRun>, arazzo_store::StoreError> {
         Ok(None)
     }
 
-    async fn get_run_steps(&self, _run_id: uuid::Uuid) -> Result<Vec<arazzo_store::RunStep>, arazzo_store::StoreError> {
+    async fn get_run_steps(
+        &self,
+        _run_id: uuid::Uuid,
+    ) -> Result<Vec<arazzo_store::RunStep>, arazzo_store::StoreError> {
         Ok(vec![])
     }
 
-    async fn reset_stale_running_steps(&self, _run_id: uuid::Uuid) -> Result<i64, arazzo_store::StoreError> {
+    async fn reset_stale_running_steps(
+        &self,
+        _run_id: uuid::Uuid,
+    ) -> Result<i64, arazzo_store::StoreError> {
         Ok(0)
     }
 
-    async fn get_step_attempts(&self, _run_step_id: uuid::Uuid) -> Result<Vec<arazzo_store::StepAttempt>, arazzo_store::StoreError> {
+    async fn get_step_attempts(
+        &self,
+        _run_step_id: uuid::Uuid,
+    ) -> Result<Vec<arazzo_store::StepAttempt>, arazzo_store::StoreError> {
         Ok(vec![])
     }
 
-    async fn get_events_after(&self, _run_id: uuid::Uuid, _after_id: i64, _limit: i64) -> Result<Vec<arazzo_store::RunEvent>, arazzo_store::StoreError> {
+    async fn get_events_after(
+        &self,
+        _run_id: uuid::Uuid,
+        _after_id: i64,
+        _limit: i64,
+    ) -> Result<Vec<arazzo_store::RunEvent>, arazzo_store::StoreError> {
         Ok(vec![])
     }
 
-    async fn check_run_status(&self, _run_id: uuid::Uuid) -> Result<String, arazzo_store::StoreError> {
+    async fn check_run_status(
+        &self,
+        _run_id: uuid::Uuid,
+    ) -> Result<String, arazzo_store::StoreError> {
         Ok("succeeded".to_string())
     }
 }
@@ -239,7 +262,10 @@ fn make_policy() -> PolicyConfig {
     PolicyConfig {
         network: arazzo_exec::policy::NetworkConfig {
             allowed_schemes: ["https"].into_iter().map(|s| s.to_string()).collect(),
-            allowed_hosts: ["api.test.local"].into_iter().map(|s| s.to_string()).collect(),
+            allowed_hosts: ["api.test.local"]
+                .into_iter()
+                .map(|s| s.to_string())
+                .collect(),
             allowed_base_urls: BTreeSet::new(),
             redirects: Default::default(),
             deny_private_ip_literals: true,
@@ -427,4 +453,3 @@ async fn missing_base_url_fails_step() {
         _ => panic!("expected Failed result"),
     }
 }
-

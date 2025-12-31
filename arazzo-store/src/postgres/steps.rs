@@ -5,7 +5,11 @@ use uuid::Uuid;
 
 use crate::store::{AttemptStatus, RunStep, StepAttempt, StoreError};
 
-pub async fn claim_runnable_steps(pool: &PgPool, run_id: Uuid, limit: i64) -> Result<Vec<RunStep>, StoreError> {
+pub async fn claim_runnable_steps(
+    pool: &PgPool,
+    run_id: Uuid,
+    limit: i64,
+) -> Result<Vec<RunStep>, StoreError> {
     let mut tx = pool.begin().await?;
 
     let rows = sqlx::query_as::<_, RunStep>(
@@ -63,7 +67,12 @@ FROM run_steps WHERE run_id = $1 ORDER BY step_index
     Ok(rows)
 }
 
-pub async fn mark_step_succeeded(pool: &PgPool, run_id: Uuid, step_id: &str, outputs: JsonValue) -> Result<(), StoreError> {
+pub async fn mark_step_succeeded(
+    pool: &PgPool,
+    run_id: Uuid,
+    step_id: &str,
+    outputs: JsonValue,
+) -> Result<(), StoreError> {
     let mut tx = pool.begin().await?;
 
     sqlx::query(
@@ -95,7 +104,11 @@ WHERE e.run_id = $1 AND e.from_step_id = $2 AND e.to_step_id = d.step_id
     Ok(())
 }
 
-pub async fn get_step_outputs(pool: &PgPool, run_id: Uuid, step_id: &str) -> Result<JsonValue, StoreError> {
+pub async fn get_step_outputs(
+    pool: &PgPool,
+    run_id: Uuid,
+    step_id: &str,
+) -> Result<JsonValue, StoreError> {
     let rec: (JsonValue,) = sqlx::query_as(
         r#"SELECT outputs FROM run_steps WHERE run_id = $1 AND step_id = $2 AND status = 'succeeded'"#,
     )
@@ -106,7 +119,13 @@ pub async fn get_step_outputs(pool: &PgPool, run_id: Uuid, step_id: &str) -> Res
     Ok(rec.0)
 }
 
-pub async fn schedule_retry(pool: &PgPool, run_id: Uuid, step_id: &str, delay_ms: i64, error: JsonValue) -> Result<(), StoreError> {
+pub async fn schedule_retry(
+    pool: &PgPool,
+    run_id: Uuid,
+    step_id: &str,
+    delay_ms: i64,
+    error: JsonValue,
+) -> Result<(), StoreError> {
     sqlx::query(
         r#"
 UPDATE run_steps SET status = 'pending', next_run_at = now() + ($3 * interval '1 millisecond'), error = $4
@@ -122,7 +141,12 @@ WHERE run_id = $1 AND step_id = $2
     Ok(())
 }
 
-pub async fn mark_step_failed(pool: &PgPool, run_id: Uuid, step_id: &str, error: JsonValue) -> Result<(), StoreError> {
+pub async fn mark_step_failed(
+    pool: &PgPool,
+    run_id: Uuid,
+    step_id: &str,
+    error: JsonValue,
+) -> Result<(), StoreError> {
     let mut tx = pool.begin().await?;
 
     sqlx::query(
@@ -171,7 +195,11 @@ WHERE d.run_id = $1 AND d.step_id = ts.step_id
     Ok(())
 }
 
-pub async fn insert_attempt_auto(pool: &PgPool, run_step_id: Uuid, request: JsonValue) -> Result<(Uuid, i32), StoreError> {
+pub async fn insert_attempt_auto(
+    pool: &PgPool,
+    run_step_id: Uuid,
+    request: JsonValue,
+) -> Result<(Uuid, i32), StoreError> {
     let rec: (Uuid, i32) = sqlx::query_as(
         r#"
 WITH next_no AS (
@@ -216,7 +244,10 @@ WHERE id = $1
     Ok(())
 }
 
-pub async fn get_step_attempts(pool: &PgPool, run_step_id: Uuid) -> Result<Vec<StepAttempt>, StoreError> {
+pub async fn get_step_attempts(
+    pool: &PgPool,
+    run_step_id: Uuid,
+) -> Result<Vec<StepAttempt>, StoreError> {
     let rows = sqlx::query_as::<_, StepAttempt>(
         r#"
 SELECT id, run_step_id, attempt_no, status, request, response, error, duration_ms, started_at, finished_at
@@ -228,4 +259,3 @@ FROM step_attempts WHERE run_step_id = $1 ORDER BY attempt_no
     .await?;
     Ok(rows)
 }
-

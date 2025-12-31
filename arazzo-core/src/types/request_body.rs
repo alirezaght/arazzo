@@ -24,4 +24,3 @@ pub struct RequestBody {
     #[serde(flatten, default)]
     pub extensions: Extensions,
 }
-

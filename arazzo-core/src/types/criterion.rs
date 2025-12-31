@@ -45,4 +45,3 @@ pub struct Criterion {
     #[serde(flatten, default)]
     pub extensions: Extensions,
 }
-

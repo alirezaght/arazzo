@@ -4,7 +4,7 @@ use arazzo_core::types::{ArazzoDocument, Parameter, ParameterOrReusable, Step};
 use serde_json::Value as JsonValue;
 use uuid::Uuid;
 
-use crate::executor::eval::{EvalContext, eval_value};
+use crate::executor::eval::{eval_value, EvalContext};
 use crate::policy::HttpRequestParts;
 use crate::secrets::{SecretPlacement, SecretRef, SecretsProvider};
 
@@ -19,7 +19,7 @@ pub struct SecretsPolicyForSource {
     pub allow_secrets_in_url: bool,
 }
 
-
+#[allow(clippy::too_many_arguments)]
 pub async fn build_request(
     store: &dyn arazzo_store::StateStore,
     secrets: &dyn SecretsProvider,
@@ -41,7 +41,12 @@ pub async fn build_request(
             if let Some(p) = p {
                 let val = eval_value(
                     &p.value,
-                    &EvalContext { run_id, inputs, store, response: None },
+                    &EvalContext {
+                        run_id,
+                        inputs,
+                        store,
+                        response: None,
+                    },
                 )
                 .await
                 .map_err(|e| format!("eval error: {e}"))?;
@@ -49,7 +54,8 @@ pub async fn build_request(
                 let s = value_to_string(&val);
                 match &p.r#in {
                     Some(arazzo_core::types::ParameterLocation::Header) => {
-                        let (val, is_secret) = resolve_secret(secrets, &s, SecretPlacement::Header, true).await;
+                        let (val, is_secret) =
+                            resolve_secret(secrets, &s, SecretPlacement::Header, true).await;
                         headers.insert(p.name.clone(), val);
                         if is_secret {
                             secret_derived_headers.push(p.name.clone());
@@ -57,19 +63,25 @@ pub async fn build_request(
                     }
                     Some(arazzo_core::types::ParameterLocation::Query) => {
                         let allowed = secrets_policy.allow_secrets_in_url;
-                        let (val, _) = resolve_secret(secrets, &s, SecretPlacement::UrlQuery, allowed).await;
+                        let (val, _) =
+                            resolve_secret(secrets, &s, SecretPlacement::UrlQuery, allowed).await;
                         query.push((p.name.clone(), val));
                     }
                     Some(arazzo_core::types::ParameterLocation::Path) => {
                         let allowed = secrets_policy.allow_secrets_in_url;
-                        let (val, _) = resolve_secret(secrets, &s, SecretPlacement::UrlPath, allowed).await;
+                        let (val, _) =
+                            resolve_secret(secrets, &s, SecretPlacement::UrlPath, allowed).await;
                         path_params.insert(p.name.clone(), val);
                     }
                     Some(arazzo_core::types::ParameterLocation::Cookie) => {
-                        let (val, is_secret) = resolve_secret(secrets, &s, SecretPlacement::Header, true).await;
+                        let (val, is_secret) =
+                            resolve_secret(secrets, &s, SecretPlacement::Header, true).await;
                         headers
                             .entry("Cookie".to_string())
-                            .and_modify(|c| { c.push_str("; "); c.push_str(&format!("{}={}", p.name, val)); })
+                            .and_modify(|c| {
+                                c.push_str("; ");
+                                c.push_str(&format!("{}={}", p.name, val));
+                            })
                             .or_insert_with(|| format!("{}={}", p.name, val));
                         if is_secret {
                             secret_derived_headers.push("Cookie".to_string());
@@ -81,33 +93,49 @@ pub async fn build_request(
         }
     }
 
-fn resolve_parameter<'a>(
-    param_or_ref: &'a ParameterOrReusable,
-    document: Option<&'a ArazzoDocument>,
-) -> Result<Option<&'a Parameter>, String> {
-    match param_or_ref {
-        ParameterOrReusable::Parameter(p) => Ok(Some(p)),
-        ParameterOrReusable::Reusable(r) => {
-            // Parse reference like $components.parameters.authHeader
-            let ref_str = r.reference.trim();
-            if let Some(name) = ref_str.strip_prefix("$components.parameters.") {
-                let doc = document.ok_or_else(|| "document required to resolve component references".to_string())?;
-                let components = doc.components.as_ref().ok_or_else(|| format!("no components defined for reference {}", ref_str))?;
-                let params = components.parameters.as_ref().ok_or_else(|| format!("no parameters in components for reference {}", ref_str))?;
-                let param = params.get(name).ok_or_else(|| format!("parameter {} not found in components", name))?;
-                Ok(Some(param))
-            } else {
-                Err(format!("unsupported parameter reference: {}", ref_str))
+    fn resolve_parameter<'a>(
+        param_or_ref: &'a ParameterOrReusable,
+        document: Option<&'a ArazzoDocument>,
+    ) -> Result<Option<&'a Parameter>, String> {
+        match param_or_ref {
+            ParameterOrReusable::Parameter(p) => Ok(Some(p)),
+            ParameterOrReusable::Reusable(r) => {
+                // Parse reference like $components.parameters.authHeader
+                let ref_str = r.reference.trim();
+                if let Some(name) = ref_str.strip_prefix("$components.parameters.") {
+                    let doc = document.ok_or_else(|| {
+                        "document required to resolve component references".to_string()
+                    })?;
+                    let components = doc.components.as_ref().ok_or_else(|| {
+                        format!("no components defined for reference {}", ref_str)
+                    })?;
+                    let params = components.parameters.as_ref().ok_or_else(|| {
+                        format!("no parameters in components for reference {}", ref_str)
+                    })?;
+                    let param = params
+                        .get(name)
+                        .ok_or_else(|| format!("parameter {} not found in components", name))?;
+                    Ok(Some(param))
+                } else {
+                    Err(format!("unsupported parameter reference: {}", ref_str))
+                }
             }
         }
     }
-}
 
     let (body_bytes, body_contains_secrets) = if let Some(rb) = &step.request_body {
         if let Some(payload) = &rb.payload {
-            let v = eval_value(payload, &EvalContext { run_id, inputs, store, response: None })
-                .await
-                .map_err(|e| format!("eval error: {e}"))?;
+            let v = eval_value(
+                payload,
+                &EvalContext {
+                    run_id,
+                    inputs,
+                    store,
+                    response: None,
+                },
+            )
+            .await
+            .map_err(|e| format!("eval error: {e}"))?;
             resolve_body_secrets(secrets, v).await?
         } else {
             (Vec::new(), false)
@@ -116,7 +144,12 @@ fn resolve_parameter<'a>(
         (Vec::new(), false)
     };
 
-    let url = build_url(&resolved_op.base_url, &resolved_op.path, &path_params, &query)?;
+    let url = build_url(
+        &resolved_op.base_url,
+        &resolved_op.path,
+        &path_params,
+        &query,
+    )?;
 
     Ok(RequestBuildResult {
         parts: HttpRequestParts {

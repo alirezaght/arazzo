@@ -49,4 +49,3 @@ impl Violation {
         }
     }
 }
-

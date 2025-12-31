@@ -1,7 +1,7 @@
-use std::sync::Arc;
-use std::sync::atomic::{AtomicUsize, Ordering};
 use arazzo_exec::executor::{Event, EventSink};
 use async_trait::async_trait;
+use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::Arc;
 
 pub struct ProgressEventSink {
     total_steps: usize,
@@ -27,8 +27,10 @@ impl ProgressEventSink {
         let total = self.total_steps;
         let done = completed + failed;
         let percent = if total > 0 { (done * 100) / total } else { 0 };
-        eprint!("\rProgress: [{}/{}] {}% (✓{} ✗{} →{})", 
-            done, total, percent, completed, failed, running);
+        eprint!(
+            "\rProgress: [{}/{}] {}% (✓{} ✗{} →{})",
+            done, total, percent, completed, failed, running
+        );
         if done == total {
             eprintln!();
         }
@@ -45,16 +47,28 @@ impl EventSink for ProgressEventSink {
             }
             Event::StepSucceeded { .. } => {
                 self.completed.fetch_add(1, Ordering::Relaxed);
-                self.running.fetch_update(Ordering::Relaxed, Ordering::Relaxed, |v| {
-                    if v > 0 { Some(v - 1) } else { Some(0) }
-                }).ok();
+                self.running
+                    .fetch_update(Ordering::Relaxed, Ordering::Relaxed, |v| {
+                        if v > 0 {
+                            Some(v - 1)
+                        } else {
+                            Some(0)
+                        }
+                    })
+                    .ok();
                 self.update_progress();
             }
             Event::StepFailed { .. } => {
                 self.failed.fetch_add(1, Ordering::Relaxed);
-                self.running.fetch_update(Ordering::Relaxed, Ordering::Relaxed, |v| {
-                    if v > 0 { Some(v - 1) } else { Some(0) }
-                }).ok();
+                self.running
+                    .fetch_update(Ordering::Relaxed, Ordering::Relaxed, |v| {
+                        if v > 0 {
+                            Some(v - 1)
+                        } else {
+                            Some(0)
+                        }
+                    })
+                    .ok();
                 self.update_progress();
             }
             _ => {}

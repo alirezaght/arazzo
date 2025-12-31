@@ -8,4 +8,3 @@ pub async fn run_migrations(pool: &PgPool) -> Result<(), StoreError> {
     result.map_err(|e| StoreError::Other(e.to_string()))?;
     Ok(())
 }
-

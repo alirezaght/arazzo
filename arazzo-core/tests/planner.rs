@@ -1,4 +1,4 @@
-use arazzo_core::{DocumentFormat, PlanOptions, plan_from_str};
+use arazzo_core::{plan_from_str, DocumentFormat, PlanOptions};
 
 #[test]
 fn planner_builds_levels_from_step_data_dependencies() {
@@ -45,16 +45,22 @@ workflows:
 
     assert!(outcome.validation.is_valid);
     let plan = outcome.plan.unwrap();
-    assert_eq!(plan.graph.levels, vec![
-        vec!["login".to_string()],
-        vec!["createOrder".to_string()],
-        vec!["fetchOrder".to_string()],
-    ]);
-    assert_eq!(plan.graph.topo_order, vec![
-        "login".to_string(),
-        "createOrder".to_string(),
-        "fetchOrder".to_string(),
-    ]);
+    assert_eq!(
+        plan.graph.levels,
+        vec![
+            vec!["login".to_string()],
+            vec!["createOrder".to_string()],
+            vec!["fetchOrder".to_string()],
+        ]
+    );
+    assert_eq!(
+        plan.graph.topo_order,
+        vec![
+            "login".to_string(),
+            "createOrder".to_string(),
+            "fetchOrder".to_string(),
+        ]
+    );
 }
 
 #[test]
@@ -172,4 +178,3 @@ workflows:
     let plan = outcome.plan.unwrap();
     assert!(!plan.summary.missing_inputs.contains("userId"));
 }
-

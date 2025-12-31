@@ -3,7 +3,7 @@ use serde::Serialize;
 use uuid::Uuid;
 
 use crate::exit_codes;
-use crate::output::{OutputFormat, print_error, print_result};
+use crate::output::{print_error, print_result, OutputFormat};
 use crate::utils::redact_url_password;
 use crate::{OutputArgs, StoreArgs};
 
@@ -38,7 +38,8 @@ pub async fn status_cmd(run_id: &str, output: OutputArgs, store: StoreArgs) -> i
         }
     };
 
-    let database_url = match store.store
+    let database_url = match store
+        .store
         .or_else(|| std::env::var("ARAZZO_DATABASE_URL").ok())
         .or_else(|| std::env::var("DATABASE_URL").ok())
     {
@@ -65,7 +66,14 @@ pub async fn status_cmd(run_id: &str, output: OutputArgs, store: StoreArgs) -> i
             return exit_codes::RUNTIME_ERROR;
         }
         Err(e) => {
-            print_error(output.format, output.quiet, &format!("failed to get run {}: {e}. Run may not exist or database error occurred.", run_uuid));
+            print_error(
+                output.format,
+                output.quiet,
+                &format!(
+                    "failed to get run {}: {e}. Run may not exist or database error occurred.",
+                    run_uuid
+                ),
+            );
             return exit_codes::RUNTIME_ERROR;
         }
     };
@@ -73,7 +81,11 @@ pub async fn status_cmd(run_id: &str, output: OutputArgs, store: StoreArgs) -> i
     let steps = match pg.get_run_steps(run_uuid).await {
         Ok(s) => s,
         Err(e) => {
-            print_error(output.format, output.quiet, &format!("failed to get steps: {e}"));
+            print_error(
+                output.format,
+                output.quiet,
+                &format!("failed to get steps: {e}"),
+            );
             return exit_codes::RUNTIME_ERROR;
         }
     };
@@ -95,7 +107,10 @@ pub async fn status_cmd(run_id: &str, output: OutputArgs, store: StoreArgs) -> i
                 failed_steps.push(StepSummary {
                     step_id: step.step_id.clone(),
                     status: step.status.clone(),
-                    error: step.error.as_ref().and_then(|e| e.get("message").and_then(|m| m.as_str()).map(String::from)),
+                    error: step
+                        .error
+                        .as_ref()
+                        .and_then(|e| e.get("message").and_then(|m| m.as_str()).map(String::from)),
                 });
             }
             "skipped" => skipped += 1,
@@ -143,4 +158,3 @@ pub async fn status_cmd(run_id: &str, output: OutputArgs, store: StoreArgs) -> i
 
     exit_codes::SUCCESS
 }
-

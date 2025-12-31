@@ -11,4 +11,3 @@ pub(crate) fn validate_info(v: &mut Validator, info: &Info, path: &str) {
         v.push(format!("{path}.version"), "must not be empty");
     }
 }
-

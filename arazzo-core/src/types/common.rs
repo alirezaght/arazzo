@@ -8,4 +8,3 @@ pub type RuntimeExpression = String;
 ///
 /// We deserialize "extra" fields into this map and validate the `x-` prefix at validation time.
 pub type Extensions = BTreeMap<String, serde_json::Value>;
-

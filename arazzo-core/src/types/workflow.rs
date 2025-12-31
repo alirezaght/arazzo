@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 
 use crate::types::{
-    Extensions, JsonSchema, ParameterOrReusable, RuntimeExpression, Step, FailureActionOrReusable,
+    Extensions, FailureActionOrReusable, JsonSchema, ParameterOrReusable, RuntimeExpression, Step,
     SuccessActionOrReusable,
 };
 
@@ -42,4 +42,3 @@ pub struct Workflow {
     #[serde(flatten, default)]
     pub extensions: Extensions,
 }
-

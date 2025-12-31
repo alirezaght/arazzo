@@ -45,4 +45,3 @@ pub fn print_error(format: OutputFormat, quiet: bool, message: &str) {
         OutputFormat::Dot => eprintln!("error: {message}"),
     }
 }
-

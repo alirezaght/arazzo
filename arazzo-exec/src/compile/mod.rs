@@ -3,8 +3,8 @@ use std::collections::BTreeSet;
 use arazzo_core::types::{ArazzoDocument, ParameterLocation, Step, Workflow};
 
 use crate::openapi::{
-    DiagnosticSeverity, OpenApiDiagnostic, OpenApiParamLocation, OpenApiResolver, ResolvedOperation,
-    ResolvedSources,
+    DiagnosticSeverity, OpenApiDiagnostic, OpenApiParamLocation, OpenApiResolver,
+    ResolvedOperation, ResolvedSources,
 };
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -41,7 +41,6 @@ pub struct Compiler {
     resolver: OpenApiResolver,
 }
 
-
 impl Compiler {
     pub async fn compile_workflow(
         &self,
@@ -71,7 +70,10 @@ async fn compile_workflow_with_sources(
         let mut missing_rb_required = false;
 
         if step.operation_id.is_some() || step.operation_path.is_some() {
-            match resolver.resolve_step_operation(sources, workflow, step).await {
+            match resolver
+                .resolve_step_operation(sources, workflow, step)
+                .await
+            {
                 Ok((resolved, mut extra_diags)) => {
                     diag.append(&mut extra_diags);
                     missing = missing_required_params(step, &resolved);
@@ -179,4 +181,3 @@ fn map_param_loc(loc: &ParameterLocation) -> Option<OpenApiParamLocation> {
         ParameterLocation::Cookie => Some(OpenApiParamLocation::Cookie),
     }
 }
-

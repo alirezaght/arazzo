@@ -2,8 +2,8 @@ use std::collections::BTreeMap;
 use std::time::Duration;
 
 use arazzo_exec::secrets::{
-    CacheConfig, CachingProvider, RedactionPolicy, SecretPlacement, SecretRef,
-    SecretsPolicy, SecretsProvider, redact_headers,
+    redact_headers, CacheConfig, CachingProvider, RedactionPolicy, SecretPlacement, SecretRef,
+    SecretsPolicy, SecretsProvider,
 };
 
 #[tokio::test]
@@ -20,7 +20,9 @@ fn policy_disallows_secrets_in_url_by_default() {
     let r = SecretRef::parse("secrets://MY_TOKEN").unwrap();
     assert!(policy.ensure_allowed(&r, SecretPlacement::Header).is_ok());
     assert!(policy.ensure_allowed(&r, SecretPlacement::Body).is_ok());
-    assert!(policy.ensure_allowed(&r, SecretPlacement::UrlQuery).is_err());
+    assert!(policy
+        .ensure_allowed(&r, SecretPlacement::UrlQuery)
+        .is_err());
 }
 
 #[test]
@@ -47,9 +49,15 @@ async fn caching_provider_caches_with_ttl() {
 
     #[async_trait::async_trait]
     impl SecretsProvider for CountingProvider {
-        async fn get(&self, _secret_ref: &SecretRef) -> Result<arazzo_exec::secrets::SecretValue, arazzo_exec::secrets::SecretError> {
+        async fn get(
+            &self,
+            _secret_ref: &SecretRef,
+        ) -> Result<arazzo_exec::secrets::SecretValue, arazzo_exec::secrets::SecretError> {
             let n = self.0.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
-            Ok(arazzo_exec::secrets::SecretValue::from_string(format!("v{}", n)))
+            Ok(arazzo_exec::secrets::SecretValue::from_string(format!(
+                "v{}",
+                n
+            )))
         }
     }
 
@@ -68,4 +76,3 @@ async fn caching_provider_caches_with_ttl() {
     let v2 = cache.get(&r).await.unwrap();
     assert_eq!(std::str::from_utf8(v2.expose_bytes()).unwrap(), "v1");
 }
-

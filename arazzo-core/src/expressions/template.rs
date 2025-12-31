@@ -1,4 +1,4 @@
-use super::runtime::{RuntimeExprError, parse_runtime_expr};
+use super::runtime::{parse_runtime_expr, RuntimeExprError};
 use crate::types::AnyValue;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -108,4 +108,3 @@ pub enum TemplateError {
     #[error("unclosed embedded expression (missing '}}')")]
     UnclosedExpression,
 }
-

@@ -101,5 +101,3 @@ fn compute_levels(topo: &[String], depends_on: &BTreeMap<String, Vec<String>>) -
     }
     levels
 }
-
-

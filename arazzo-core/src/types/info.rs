@@ -15,4 +15,3 @@ pub struct Info {
     #[serde(flatten, default)]
     pub extensions: Extensions,
 }
-

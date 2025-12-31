@@ -4,6 +4,7 @@ use uuid::Uuid;
 
 use crate::store::{NewRun, NewRunStep, NewStep, RunStatus, RunStepEdge, StoreError, WorkflowRun};
 
+#[allow(clippy::too_many_arguments)]
 pub async fn create_run_with_id(
     pool: &PgPool,
     run_id: Uuid,
@@ -166,7 +167,11 @@ pub async fn check_run_status(pool: &PgPool, run_id: Uuid) -> Result<String, Sto
     Ok(rec.0)
 }
 
-async fn insert_steps(tx: &mut Transaction<'_, Postgres>, run_id: Uuid, steps: &[NewStep]) -> Result<(), StoreError> {
+async fn insert_steps(
+    tx: &mut Transaction<'_, Postgres>,
+    run_id: Uuid,
+    steps: &[NewStep],
+) -> Result<(), StoreError> {
     for s in steps {
         let deps_remaining = s.depends_on.len() as i32;
         sqlx::query(
@@ -190,7 +195,11 @@ ON CONFLICT (run_id, step_id) DO NOTHING
     Ok(())
 }
 
-async fn insert_edges_from_steps(tx: &mut Transaction<'_, Postgres>, run_id: Uuid, steps: &[NewStep]) -> Result<(), StoreError> {
+async fn insert_edges_from_steps(
+    tx: &mut Transaction<'_, Postgres>,
+    run_id: Uuid,
+    steps: &[NewStep],
+) -> Result<(), StoreError> {
     for s in steps {
         for dep in &s.depends_on {
             sqlx::query(
@@ -264,4 +273,3 @@ RETURNING id
 
     Ok(rec.0)
 }
-

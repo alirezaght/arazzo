@@ -1,6 +1,6 @@
 use std::collections::BTreeMap;
 
-use arazzo_core::expressions::{RuntimeExpr, Segment, parse_runtime_expr, parse_template};
+use arazzo_core::expressions::{parse_runtime_expr, parse_template, RuntimeExpr, Segment};
 use serde_json::Value as JsonValue;
 
 use arazzo_store::StateStore;
@@ -82,9 +82,13 @@ async fn eval_runtime_expr(expr: &str, ctx: &EvalContext<'_>) -> Result<JsonValu
     match parsed {
         RuntimeExpr::Inputs(np) => {
             let mut cur = ctx.inputs;
-            cur = cur.get(&np.root).ok_or_else(|| format!("missing input: {}", np.root))?;
+            cur = cur
+                .get(&np.root)
+                .ok_or_else(|| format!("missing input: {}", np.root))?;
             for seg in np.rest {
-                cur = cur.get(&seg).ok_or_else(|| format!("missing input path: {}", seg))?;
+                cur = cur
+                    .get(&seg)
+                    .ok_or_else(|| format!("missing input path: {}", seg))?;
             }
             Ok(cur.clone())
         }
@@ -113,14 +117,14 @@ async fn eval_runtime_expr(expr: &str, ctx: &EvalContext<'_>) -> Result<JsonValu
             }
             Ok(cur)
         }
-        RuntimeExpr::StatusCode => Ok(JsonValue::Number(ctx
-            .response
-            .as_ref()
-            .map(|r| r.status)
-            .unwrap_or(0)
-            .into())),
+        RuntimeExpr::StatusCode => Ok(JsonValue::Number(
+            ctx.response.as_ref().map(|r| r.status).unwrap_or(0).into(),
+        )),
         RuntimeExpr::Response(source) => {
-            let r = ctx.response.as_ref().ok_or_else(|| "no response context".to_string())?;
+            let r = ctx
+                .response
+                .as_ref()
+                .ok_or_else(|| "no response context".to_string())?;
             match source {
                 arazzo_core::expressions::Source::Header(h) => {
                     let v = r
@@ -132,9 +136,15 @@ async fn eval_runtime_expr(expr: &str, ctx: &EvalContext<'_>) -> Result<JsonValu
                     Ok(JsonValue::String(v))
                 }
                 arazzo_core::expressions::Source::Body { pointer } => {
-                    let json = r.body_json.clone().ok_or_else(|| "response body is not JSON".to_string())?;
+                    let json = r
+                        .body_json
+                        .clone()
+                        .ok_or_else(|| "response body is not JSON".to_string())?;
                     if let Some(ptr) = pointer {
-                        Ok(json.pointer(ptr.as_str()).cloned().unwrap_or(JsonValue::Null))
+                        Ok(json
+                            .pointer(ptr.as_str())
+                            .cloned()
+                            .unwrap_or(JsonValue::Null))
                     } else {
                         Ok(json)
                     }
@@ -145,4 +155,3 @@ async fn eval_runtime_expr(expr: &str, ctx: &EvalContext<'_>) -> Result<JsonValu
         _ => Err("unsupported runtime expression".to_string()),
     }
 }
-

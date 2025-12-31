@@ -145,4 +145,3 @@ fn decide_network_failure_defaults_to_failed_when_no_retry() {
         _ => panic!("expected failed result"),
     }
 }
-

@@ -8,10 +8,10 @@ pub mod types;
 pub mod validate;
 
 pub use crate::error::{ArazzoError, ParseError, ValidationError};
-pub use crate::parser::{DocumentFormat, ParsedDocument, parse_document_str};
-pub use crate::types::ArazzoDocument;
-pub use crate::validate::{Validate, validate_document};
+pub use crate::parser::{parse_document_str, DocumentFormat, ParsedDocument};
 pub use crate::planner::{
-    DependencyGraph, Plan, PlanFormat, PlanIntentStep, PlanOperationRef, PlanOptions,
-    PlanningOutcome, PlanSummary, ValidationSummary, plan_from_str, plan_document,
+    plan_document, plan_from_str, DependencyGraph, Plan, PlanFormat, PlanIntentStep,
+    PlanOperationRef, PlanOptions, PlanSummary, PlanningOutcome, ValidationSummary,
 };
+pub use crate::types::ArazzoDocument;
+pub use crate::validate::{validate_document, Validate};

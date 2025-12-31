@@ -41,7 +41,9 @@ impl Default for ReqwestHttpClient {
             .user_agent(concat!("arazzo-exec/", env!("CARGO_PKG_VERSION")))
             .build()
             .unwrap_or_else(|e| {
-                panic!("failed to create reqwest HTTP client: {e}. This is a bug - please report it.");
+                panic!(
+                    "failed to create reqwest HTTP client: {e}. This is a bug - please report it."
+                );
             });
         Self { client }
     }
@@ -55,11 +57,13 @@ impl HttpClient for ReqwestHttpClient {
         timeout: Duration,
         max_response_bytes: usize,
     ) -> Result<HttpResponseParts, HttpError> {
-        let method: reqwest::Method = req.method.parse().map_err(|e: <reqwest::Method as std::str::FromStr>::Err| HttpError::Other(e.to_string()))?;
-        let mut rb = self
-            .client
-            .request(method, req.url)
-            .timeout(timeout);
+        let method: reqwest::Method =
+            req.method
+                .parse()
+                .map_err(|e: <reqwest::Method as std::str::FromStr>::Err| {
+                    HttpError::Other(e.to_string())
+                })?;
+        let mut rb = self.client.request(method, req.url).timeout(timeout);
 
         for (k, v) in req.headers {
             rb = rb.header(k, v);
@@ -80,11 +84,17 @@ impl HttpClient for ReqwestHttpClient {
         // Read response body with size cap.
         let body = resp.bytes().await.map_err(map_reqwest_error)?;
         if body.len() > max_response_bytes {
-            return Err(HttpError::ResponseTooLarge { max_bytes: max_response_bytes });
+            return Err(HttpError::ResponseTooLarge {
+                max_bytes: max_response_bytes,
+            });
         }
         let body = body.to_vec();
 
-        Ok(HttpResponseParts { status, headers, body })
+        Ok(HttpResponseParts {
+            status,
+            headers,
+            body,
+        })
     }
 }
 
@@ -97,4 +107,3 @@ fn map_reqwest_error(e: reqwest::Error) -> HttpError {
     }
     HttpError::Other(e.to_string())
 }
-

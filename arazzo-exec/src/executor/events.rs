@@ -98,94 +98,78 @@ impl StoreEventSink {
 impl EventSink for StoreEventSink {
     async fn emit(&self, event: Event) {
         let (run_id, step_id, event_type, payload) = match event {
-            Event::RunStarted { run_id, workflow_id } => {
-                (run_id, None, "run.started", json!({ "workflow_id": workflow_id }))
-            }
-            Event::RunFinished { run_id, status } => {
-                (
-                    run_id,
-                    None,
-                    "run.finished",
-                    json!({ "status": status.as_str() }),
-                )
-            }
+            Event::RunStarted {
+                run_id,
+                workflow_id,
+            } => (
+                run_id,
+                None,
+                "run.started",
+                json!({ "workflow_id": workflow_id }),
+            ),
+            Event::RunFinished { run_id, status } => (
+                run_id,
+                None,
+                "run.finished",
+                json!({ "status": status.as_str() }),
+            ),
             Event::StepStarted { run_id, step_id } => {
-                (
-                    run_id,
-                    None,
-                    "step.started",
-                    json!({ "step_id": step_id }),
-                )
+                (run_id, None, "step.started", json!({ "step_id": step_id }))
             }
-            Event::StepSucceeded { run_id, step_id } => {
-                (
-                    run_id,
-                    None,
-                    "step.succeeded",
-                    json!({ "step_id": step_id }),
-                )
-            }
+            Event::StepSucceeded { run_id, step_id } => (
+                run_id,
+                None,
+                "step.succeeded",
+                json!({ "step_id": step_id }),
+            ),
             Event::StepFailed { run_id, step_id } => {
-                (
-                    run_id,
-                    None,
-                    "step.failed",
-                    json!({ "step_id": step_id }),
-                )
+                (run_id, None, "step.failed", json!({ "step_id": step_id }))
             }
             Event::StepRetryScheduled {
                 run_id,
                 step_id,
                 delay_ms,
-            } => {
-                (
-                    run_id,
-                    None,
-                    "step.retry_scheduled",
-                    json!({ "step_id": step_id, "delay_ms": delay_ms }),
-                )
-            }
+            } => (
+                run_id,
+                None,
+                "step.retry_scheduled",
+                json!({ "step_id": step_id, "delay_ms": delay_ms }),
+            ),
             Event::AttemptStarted {
                 run_id,
                 step_id,
                 attempt_no,
-            } => {
-                (
-                    run_id,
-                    None,
-                    "attempt.started",
-                    json!({ "step_id": step_id, "attempt_no": attempt_no }),
-                )
-            }
+            } => (
+                run_id,
+                None,
+                "attempt.started",
+                json!({ "step_id": step_id, "attempt_no": attempt_no }),
+            ),
             Event::AttemptFinished {
                 run_id,
                 step_id,
                 attempt_no,
                 succeeded,
-            } => {
-                (
-                    run_id,
-                    None,
-                    "attempt.finished",
-                    json!({
-                        "step_id": step_id,
-                        "attempt_no": attempt_no,
-                        "succeeded": succeeded
-                    }),
-                )
-            }
+            } => (
+                run_id,
+                None,
+                "attempt.finished",
+                json!({
+                    "step_id": step_id,
+                    "attempt_no": attempt_no,
+                    "succeeded": succeeded
+                }),
+            ),
             Event::PolicyDenied {
                 run_id,
                 step_id,
                 reason,
-            } => {
-                (
-                    run_id,
-                    None,
-                    "policy.denied",
-                    json!({ "step_id": step_id, "reason": reason }),
-                )
-            }
+            } => (
+                run_id,
+                None,
+                "policy.denied",
+                json!({ "step_id": step_id, "reason": reason }),
+            ),
         };
 
         let _ = self
@@ -206,7 +190,10 @@ pub struct StdoutEventSink;
 impl EventSink for StdoutEventSink {
     async fn emit(&self, event: Event) {
         let json = match event {
-            Event::RunStarted { run_id, workflow_id } => {
+            Event::RunStarted {
+                run_id,
+                workflow_id,
+            } => {
                 json!({ "type": "run.started", "run_id": run_id.to_string(), "workflow_id": workflow_id })
             }
             Event::RunFinished { run_id, status } => {
@@ -221,16 +208,33 @@ impl EventSink for StdoutEventSink {
             Event::StepFailed { run_id, step_id } => {
                 json!({ "type": "step.failed", "run_id": run_id.to_string(), "step_id": step_id })
             }
-            Event::StepRetryScheduled { run_id, step_id, delay_ms } => {
+            Event::StepRetryScheduled {
+                run_id,
+                step_id,
+                delay_ms,
+            } => {
                 json!({ "type": "step.retry_scheduled", "run_id": run_id.to_string(), "step_id": step_id, "delay_ms": delay_ms })
             }
-            Event::AttemptStarted { run_id, step_id, attempt_no } => {
+            Event::AttemptStarted {
+                run_id,
+                step_id,
+                attempt_no,
+            } => {
                 json!({ "type": "attempt.started", "run_id": run_id.to_string(), "step_id": step_id, "attempt_no": attempt_no })
             }
-            Event::AttemptFinished { run_id, step_id, attempt_no, succeeded } => {
+            Event::AttemptFinished {
+                run_id,
+                step_id,
+                attempt_no,
+                succeeded,
+            } => {
                 json!({ "type": "attempt.finished", "run_id": run_id.to_string(), "step_id": step_id, "attempt_no": attempt_no, "succeeded": succeeded })
             }
-            Event::PolicyDenied { run_id, step_id, reason } => {
+            Event::PolicyDenied {
+                run_id,
+                step_id,
+                reason,
+            } => {
                 json!({ "type": "policy.denied", "run_id": run_id.to_string(), "step_id": step_id, "reason": reason })
             }
         };
@@ -265,7 +269,5 @@ pub struct NoOpEventSink;
 
 #[async_trait]
 impl EventSink for NoOpEventSink {
-    async fn emit(&self, _event: Event) {
-    }
+    async fn emit(&self, _event: Event) {}
 }
-

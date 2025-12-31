@@ -59,4 +59,3 @@ fn get_header_ci<'a>(headers: &'a BTreeMap<String, String>, name: &str) -> Optio
         .find(|(k, _)| k.eq_ignore_ascii_case(name))
         .map(|(_, v)| v.as_str())
 }
-

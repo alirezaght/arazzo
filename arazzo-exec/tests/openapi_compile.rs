@@ -1,7 +1,7 @@
 use std::io::Write;
 
-use arazzo_core::{DocumentFormat, parse_document_str};
-use arazzo_exec::{Compiler};
+use arazzo_core::{parse_document_str, DocumentFormat};
+use arazzo_exec::Compiler;
 
 fn write_temp(contents: &str) -> tempfile::NamedTempFile {
     let mut f = tempfile::NamedTempFile::new().expect("tempfile");
@@ -69,14 +69,24 @@ workflows:
         openapi_file.path().to_string_lossy()
     );
 
-    let doc = parse_document_str(&arazzo, DocumentFormat::Yaml).unwrap().document;
+    let doc = parse_document_str(&arazzo, DocumentFormat::Yaml)
+        .unwrap()
+        .document;
     let wf = &doc.workflows[0];
 
     let compiled = Compiler::default().compile_workflow(&doc, wf).await;
-    assert!(compiled.diagnostics.is_empty(), "unexpected top-level diagnostics: {:?}", compiled.diagnostics);
+    assert!(
+        compiled.diagnostics.is_empty(),
+        "unexpected top-level diagnostics: {:?}",
+        compiled.diagnostics
+    );
 
     let step = &compiled.steps[0];
-    assert!(step.diagnostics.is_empty(), "unexpected step diagnostics: {:?}", step.diagnostics);
+    assert!(
+        step.diagnostics.is_empty(),
+        "unexpected step diagnostics: {:?}",
+        step.diagnostics
+    );
     assert!(step.missing_required_parameters.is_empty());
     assert!(!step.missing_required_request_body);
 
@@ -134,14 +144,17 @@ workflows:
         fb.path().to_string_lossy(),
     );
 
-    let doc = parse_document_str(&arazzo, DocumentFormat::Yaml).unwrap().document;
+    let doc = parse_document_str(&arazzo, DocumentFormat::Yaml)
+        .unwrap()
+        .document;
     let wf = &doc.workflows[0];
 
     let compiled = Compiler::default().compile_workflow(&doc, wf).await;
     let step = &compiled.steps[0];
     assert!(step.operation.is_none());
     assert!(
-        step.diagnostics.iter().any(|d| d.severity == arazzo_exec::openapi::DiagnosticSeverity::Error
+        step.diagnostics.iter().any(|d| d.severity
+            == arazzo_exec::openapi::DiagnosticSeverity::Error
             && d.message.contains("ambiguous operationId 'op1'")),
         "expected ambiguity error, got: {:?}",
         step.diagnostics
@@ -192,7 +205,9 @@ workflows:
         fb.path().to_string_lossy(),
     );
 
-    let doc = parse_document_str(&arazzo, DocumentFormat::Yaml).unwrap().document;
+    let doc = parse_document_str(&arazzo, DocumentFormat::Yaml)
+        .unwrap()
+        .document;
     let wf = &doc.workflows[0];
 
     let compiled = Compiler::default().compile_workflow(&doc, wf).await;
@@ -201,10 +216,11 @@ workflows:
     assert_eq!(op.source_name, "a");
 
     assert!(
-        step.diagnostics.iter().any(|d| d.severity == arazzo_exec::openapi::DiagnosticSeverity::Warning
-            && d.message.contains("unqualified operationId 'op1' resolved to source 'a'")),
+        step.diagnostics.iter().any(|d| d.severity
+            == arazzo_exec::openapi::DiagnosticSeverity::Warning
+            && d.message
+                .contains("unqualified operationId 'op1' resolved to source 'a'")),
         "expected warning, got: {:?}",
         step.diagnostics
     );
 }
-

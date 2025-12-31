@@ -50,4 +50,3 @@ pub struct Step {
     #[serde(flatten, default)]
     pub extensions: Extensions,
 }
-

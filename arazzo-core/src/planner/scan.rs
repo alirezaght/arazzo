@@ -3,7 +3,7 @@ use std::sync::LazyLock;
 
 use regex::Regex;
 
-use crate::expressions::{Segment, parse_template, parse_runtime_expr};
+use crate::expressions::{parse_runtime_expr, parse_template, Segment};
 use crate::types::{AnyValue, Step, Workflow};
 
 static STEPS_REF_RE: LazyLock<Regex> =
@@ -46,7 +46,9 @@ fn scan_step(step: &Step, deps: &mut BTreeSet<String>, inputs_ref: &mut BTreeSet
     if let Some(params) = &step.parameters {
         for p in params {
             match p {
-                crate::types::ParameterOrReusable::Parameter(p) => scan_value(&p.value, deps, inputs_ref),
+                crate::types::ParameterOrReusable::Parameter(p) => {
+                    scan_value(&p.value, deps, inputs_ref)
+                }
                 crate::types::ParameterOrReusable::Reusable(r) => {
                     scan_string(&r.reference, deps, inputs_ref);
                     if let Some(v) = &r.value {
@@ -199,5 +201,3 @@ fn input_present(inputs: &serde_json::Value, name: &str) -> bool {
     }
     true
 }
-
-

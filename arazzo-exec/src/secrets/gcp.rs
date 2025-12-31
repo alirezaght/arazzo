@@ -27,17 +27,18 @@ impl GcpSecretManagerProvider {
 
     /// Create with default GCP config (ADC, metadata server, etc.).
     pub async fn from_env() -> Result<Self, SecretError> {
-        let client = SecretManagerService::builder()
-            .build()
-            .await
-            .map_err(|e| SecretError::Provider {
-                secret_ref: SecretRef {
-                    scheme: "gcp-sm".to_string(),
-                    id: "".to_string(),
-                    query: None,
-                },
-                message: format!("failed to create GCP client: {e}"),
-            })?;
+        let client =
+            SecretManagerService::builder()
+                .build()
+                .await
+                .map_err(|e| SecretError::Provider {
+                    secret_ref: SecretRef {
+                        scheme: "gcp-sm".to_string(),
+                        id: "".to_string(),
+                        query: None,
+                    },
+                    message: format!("failed to create GCP client: {e}"),
+                })?;
 
         Ok(Self::new(client))
     }

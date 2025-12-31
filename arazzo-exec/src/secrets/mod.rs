@@ -15,12 +15,11 @@ pub use cache::{CacheConfig, CachingProvider};
 pub use error::{SecretError, SecretPolicyError};
 pub use policy::{SecretPlacement, SecretsPolicy};
 pub use provider::{CompositeProvider, EnvSecretsProvider, FileSecretsProvider, SecretsProvider};
-pub use redact::{redact_headers, RedactedHeaders, RedactionPolicy};
 pub use r#ref::{SecretRef, SecretRefParseError};
+pub use redact::{redact_headers, RedactedHeaders, RedactionPolicy};
 pub use value::SecretValue;
 
 #[cfg(feature = "aws-secrets")]
 pub use aws::AwsSecretsManagerProvider;
 #[cfg(feature = "gcp-secrets")]
 pub use gcp::GcpSecretManagerProvider;
-

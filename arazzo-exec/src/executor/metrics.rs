@@ -1,9 +1,9 @@
-use std::sync::Arc;
-use tokio::sync::Mutex;
-use std::time::{Duration, Instant};
-use async_trait::async_trait;
-use arazzo_store::RunStatus;
 use crate::executor::{Event, EventSink};
+use arazzo_store::RunStatus;
+use async_trait::async_trait;
+use std::sync::Arc;
+use std::time::{Duration, Instant};
+use tokio::sync::Mutex;
 
 #[derive(Debug, Clone, Default)]
 pub struct RunMetrics {
@@ -172,9 +172,8 @@ impl EventSink for MetricsEventSink {
             }
             _ => {}
         }
-        
+
         // Forward to base sink
         self.base.emit(event).await;
     }
 }
-

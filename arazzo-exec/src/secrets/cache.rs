@@ -35,6 +35,7 @@ struct State {
 struct CacheEntry {
     value: Arc<SecretValue>,
     expires_at: Instant,
+    last_accessed: Instant,
 }
 
 impl<P> CachingProvider<P>
@@ -62,8 +63,9 @@ where
         // Fast path: cached and not expired.
         {
             let mut s = self.state.lock().await;
-            if let Some(entry) = s.cache.get(secret_ref) {
+            if let Some(entry) = s.cache.get_mut(secret_ref) {
                 if Instant::now() < entry.expires_at {
+                    entry.last_accessed = Instant::now();
                     return Ok((*entry.value).clone());
                 }
             }
@@ -74,15 +76,17 @@ where
                 drop(s);
                 n.notified().await;
                 // After notification, try cache again.
-                let s = self.state.lock().await;
-                if let Some(entry) = s.cache.get(secret_ref) {
+                let mut s = self.state.lock().await;
+                if let Some(entry) = s.cache.get_mut(secret_ref) {
                     if Instant::now() < entry.expires_at {
+                        entry.last_accessed = Instant::now();
                         return Ok((*entry.value).clone());
                     }
                 }
                 // Fallthrough to fetch if still missing/expired.
             } else {
-                s.inflight.insert(secret_ref.clone(), Arc::new(Notify::new()));
+                s.inflight
+                    .insert(secret_ref.clone(), Arc::new(Notify::new()));
             }
         }
 
@@ -99,11 +103,13 @@ where
 
             if let Ok(value) = &fetched {
                 enforce_capacity(&mut s.cache, self.config.max_entries);
+                let now = Instant::now();
                 s.cache.insert(
                     secret_ref.clone(),
                     CacheEntry {
                         value: Arc::new(value.clone()),
-                        expires_at: Instant::now() + self.config.ttl,
+                        expires_at: now + self.config.ttl,
+                        last_accessed: now,
                     },
                 );
             }
@@ -120,15 +126,20 @@ fn enforce_capacity(cache: &mut HashMap<SecretRef, CacheEntry>, max_entries: usi
     if cache.len() < max_entries {
         return;
     }
-    // Simple eviction: drop expired first, then arbitrary until under cap.
+    // Remove expired entries first
     let now = Instant::now();
     cache.retain(|_, v| v.expires_at > now);
+
+    // If still over capacity, evict least recently used
     while cache.len() >= max_entries {
-        if let Some(k) = cache.keys().next().cloned() {
+        let oldest = cache
+            .iter()
+            .min_by_key(|(_, entry)| entry.last_accessed)
+            .map(|(k, _)| k.clone());
+        if let Some(k) = oldest {
             cache.remove(&k);
         } else {
             break;
         }
     }
 }
-

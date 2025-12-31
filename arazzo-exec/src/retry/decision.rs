@@ -6,8 +6,13 @@ use crate::retry::headers::parse_retry_after;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum RetryDecision {
-    RetryAfter { delay: Duration, reason: RetryReason },
-    Stop { reason: RetryReason },
+    RetryAfter {
+        delay: Duration,
+        reason: RetryReason,
+    },
+    Stop {
+        reason: RetryReason,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -32,6 +37,7 @@ pub enum RetryReason {
 /// - `network_failed`: if true, treat as retryable network failure (subject to limits).
 /// - `now`: time source for parsing HTTP-date retry-after.
 /// - `rand_u64`: RNG for full jitter.
+#[allow(clippy::too_many_arguments)]
 pub fn decide_retry(
     cfg: &RetryConfig,
     attempt_no: usize,
@@ -94,14 +100,23 @@ pub fn decide_retry(
     let raw = (cfg.base_delay.as_millis() as f64) * cfg.factor.powi(exp);
     let raw_ms = raw.min(cfg.max_delay.as_millis() as f64).max(0.0) as u64;
 
-    let jitter_ms = if raw_ms == 0 { 0 } else { rand_u64() % (raw_ms + 1) };
+    let jitter_ms = if raw_ms == 0 {
+        0
+    } else {
+        rand_u64() % (raw_ms + 1)
+    };
     RetryDecision::RetryAfter {
         delay: Duration::from_millis(jitter_ms),
-        reason: http_status.map(RetryReason::HttpStatus).unwrap_or(RetryReason::NetworkFailure),
+        reason: http_status
+            .map(RetryReason::HttpStatus)
+            .unwrap_or(RetryReason::NetworkFailure),
     }
 }
 
 fn clamp(delay: Duration, max: Duration) -> Duration {
-    if delay > max { max } else { delay }
+    if delay > max {
+        max
+    } else {
+        delay
+    }
 }
-

@@ -108,4 +108,3 @@ mod tests {
         assert_eq!(pairs[1], ("stage".to_string(), "AWSCURRENT".to_string()));
     }
 }
-

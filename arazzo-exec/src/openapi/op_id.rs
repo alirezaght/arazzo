@@ -1,9 +1,9 @@
 use std::collections::BTreeSet;
 
-use arazzo_core::expressions::{RuntimeExpr, parse_runtime_expr};
+use arazzo_core::expressions::{parse_runtime_expr, RuntimeExpr};
 use arazzo_core::types::Workflow;
 
-use crate::openapi::model::{ResolvedOperation, method_keys};
+use crate::openapi::model::{method_keys, ResolvedOperation};
 use crate::openapi::shape::{compile_operation_shape, select_base_url};
 
 pub(crate) enum OperationIdSelection {
@@ -24,12 +24,18 @@ pub(crate) fn select_source_for_operation_id(
     if trimmed.starts_with('$') {
         let expr = match parse_runtime_expr(trimmed) {
             Ok(e) => e,
-            Err(e) => return OperationIdSelection::Error(format!("invalid operationId runtime expression: {e}")),
+            Err(e) => {
+                return OperationIdSelection::Error(format!(
+                    "invalid operationId runtime expression: {e}"
+                ))
+            }
         };
         if let RuntimeExpr::SourceDescriptions(np) = expr {
             // expected: $sourceDescriptions.<name>.<operationId>
             let Some(op_id) = np.rest.first() else {
-                return OperationIdSelection::Error("qualified operationId must include the operationId segment".to_string());
+                return OperationIdSelection::Error(
+                    "qualified operationId must include the operationId segment".to_string(),
+                );
             };
             return OperationIdSelection::Selected {
                 source_name: np.root,
@@ -38,7 +44,8 @@ pub(crate) fn select_source_for_operation_id(
             };
         }
         return OperationIdSelection::Error(
-            "operationId runtime expression must be $sourceDescriptions.<name>.<operationId>".to_string(),
+            "operationId runtime expression must be $sourceDescriptions.<name>.<operationId>"
+                .to_string(),
         );
     }
 
@@ -155,4 +162,3 @@ pub(crate) fn find_operation_by_id(
     }
     None
 }
-

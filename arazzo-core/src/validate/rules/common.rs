@@ -1,5 +1,5 @@
-use crate::validate::validator::{MAP_KEY_RE, Validator};
 use crate::expressions::{parse_runtime_expr, parse_template, validate_value_expressions};
+use crate::validate::validator::{Validator, MAP_KEY_RE};
 
 pub(crate) fn validate_map_keys<'a>(
     v: &mut Validator,
@@ -33,4 +33,3 @@ pub(crate) fn validate_value_exprs(v: &mut Validator, path: &str, value: &serde_
         v.push(path, format!("invalid expression inside value: {e}"));
     }
 }
-

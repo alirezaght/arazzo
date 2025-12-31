@@ -1,6 +1,6 @@
+use chrono::{DateTime, Utc};
 use std::collections::BTreeMap;
 use uuid::Uuid;
-use chrono::{DateTime, Utc};
 
 use arazzo_exec::executor::eval::{EvalContext, ResponseContext};
 use arazzo_store::StateStore;
@@ -53,7 +53,6 @@ impl StateStore for MockStore {
         unimplemented!()
     }
 
-
     async fn mark_step_succeeded(
         &self,
         _run_id: uuid::Uuid,
@@ -91,10 +90,7 @@ impl StateStore for MockStore {
         unimplemented!()
     }
 
-    async fn mark_run_started(
-        &self,
-        _run_id: uuid::Uuid,
-    ) -> Result<(), arazzo_store::StoreError> {
+    async fn mark_run_started(&self, _run_id: uuid::Uuid) -> Result<(), arazzo_store::StoreError> {
         unimplemented!()
     }
 
@@ -125,11 +121,17 @@ impl StateStore for MockStore {
         unimplemented!()
     }
 
-    async fn get_run(&self, _run_id: uuid::Uuid) -> Result<Option<arazzo_store::WorkflowRun>, arazzo_store::StoreError> {
+    async fn get_run(
+        &self,
+        _run_id: uuid::Uuid,
+    ) -> Result<Option<arazzo_store::WorkflowRun>, arazzo_store::StoreError> {
         unimplemented!()
     }
 
-    async fn get_run_steps(&self, _run_id: uuid::Uuid) -> Result<Vec<arazzo_store::RunStep>, arazzo_store::StoreError> {
+    async fn get_run_steps(
+        &self,
+        _run_id: uuid::Uuid,
+    ) -> Result<Vec<arazzo_store::RunStep>, arazzo_store::StoreError> {
         unimplemented!()
     }
 
@@ -140,18 +142,28 @@ impl StateStore for MockStore {
         unimplemented!()
     }
 
-    async fn get_step_attempts(&self, _run_step_id: uuid::Uuid) -> Result<Vec<arazzo_store::StepAttempt>, arazzo_store::StoreError> {
+    async fn get_step_attempts(
+        &self,
+        _run_step_id: uuid::Uuid,
+    ) -> Result<Vec<arazzo_store::StepAttempt>, arazzo_store::StoreError> {
         unimplemented!()
     }
 
-    async fn get_events_after(&self, _run_id: uuid::Uuid, _after_id: i64, _limit: i64) -> Result<Vec<arazzo_store::RunEvent>, arazzo_store::StoreError> {
+    async fn get_events_after(
+        &self,
+        _run_id: uuid::Uuid,
+        _after_id: i64,
+        _limit: i64,
+    ) -> Result<Vec<arazzo_store::RunEvent>, arazzo_store::StoreError> {
         unimplemented!()
     }
 
-    async fn check_run_status(&self, _run_id: uuid::Uuid) -> Result<String, arazzo_store::StoreError> {
+    async fn check_run_status(
+        &self,
+        _run_id: uuid::Uuid,
+    ) -> Result<String, arazzo_store::StoreError> {
         unimplemented!()
     }
-
 }
 
 #[tokio::test]
@@ -163,7 +175,9 @@ async fn eval_literal_value() {
         response: None,
     };
 
-    let result = arazzo_exec::executor::eval::eval_value(&json!("hello"), &ctx).await.unwrap();
+    let result = arazzo_exec::executor::eval::eval_value(&json!("hello"), &ctx)
+        .await
+        .unwrap();
     assert_eq!(result, json!("hello"));
 }
 
@@ -181,10 +195,14 @@ async fn eval_inputs_expression() {
         response: None,
     };
 
-    let result = arazzo_exec::executor::eval::eval_value(&json!("$inputs.username"), &ctx).await.unwrap();
+    let result = arazzo_exec::executor::eval::eval_value(&json!("$inputs.username"), &ctx)
+        .await
+        .unwrap();
     assert_eq!(result, json!("alice"));
 
-    let result = arazzo_exec::executor::eval::eval_value(&json!("$inputs.nested.value"), &ctx).await.unwrap();
+    let result = arazzo_exec::executor::eval::eval_value(&json!("$inputs.nested.value"), &ctx)
+        .await
+        .unwrap();
     assert_eq!(result, json!(42));
 }
 
@@ -197,7 +215,10 @@ async fn eval_steps_expression() {
         response: None,
     };
 
-    let result = arazzo_exec::executor::eval::eval_value(&json!("$steps.login.outputs.token"), &ctx).await.unwrap();
+    let result =
+        arazzo_exec::executor::eval::eval_value(&json!("$steps.login.outputs.token"), &ctx)
+            .await
+            .unwrap();
     assert_eq!(result, json!("abc123"));
 }
 
@@ -210,7 +231,10 @@ async fn eval_steps_expression_with_pointer() {
         response: None,
     };
 
-    let result = arazzo_exec::executor::eval::eval_value(&json!("$steps.login.outputs.userId"), &ctx).await.unwrap();
+    let result =
+        arazzo_exec::executor::eval::eval_value(&json!("$steps.login.outputs.userId"), &ctx)
+            .await
+            .unwrap();
     assert_eq!(result, json!(42));
 }
 
@@ -232,7 +256,9 @@ async fn eval_status_code() {
         response: Some(response),
     };
 
-    let result = arazzo_exec::executor::eval::eval_value(&json!("$statusCode"), &ctx).await.unwrap();
+    let result = arazzo_exec::executor::eval::eval_value(&json!("$statusCode"), &ctx)
+        .await
+        .unwrap();
     assert_eq!(result, json!(200));
 }
 
@@ -254,13 +280,16 @@ async fn eval_response_header() {
         response: Some(response),
     };
 
-    let result = arazzo_exec::executor::eval::eval_value(&json!("$response.header.X-Custom-Header"), &ctx).await.unwrap();
+    let result =
+        arazzo_exec::executor::eval::eval_value(&json!("$response.header.X-Custom-Header"), &ctx)
+            .await
+            .unwrap();
     assert_eq!(result, json!("test-value"));
 }
 
 #[tokio::test]
 async fn eval_response_body() {
-    let mut headers = BTreeMap::new();
+    let headers = BTreeMap::new();
     let body_json = json!({
         "id": 123,
         "name": "test"
@@ -279,13 +308,15 @@ async fn eval_response_body() {
         response: Some(response),
     };
 
-    let result = arazzo_exec::executor::eval::eval_value(&json!("$response.body"), &ctx).await.unwrap();
+    let result = arazzo_exec::executor::eval::eval_value(&json!("$response.body"), &ctx)
+        .await
+        .unwrap();
     assert_eq!(result, body_json);
 }
 
 #[tokio::test]
 async fn eval_response_body_with_pointer() {
-    let mut headers = BTreeMap::new();
+    let headers = BTreeMap::new();
     let response = ResponseContext {
         status: 200,
         headers: &headers,
@@ -306,11 +337,16 @@ async fn eval_response_body_with_pointer() {
     // Note: JSON pointer syntax in $response.body#/path may not be fully supported
     // The expression parser may need to handle this differently
     // For now, test that $response.body returns the full body
-    let result = arazzo_exec::executor::eval::eval_value(&json!("$response.body"), &ctx).await.unwrap();
-    assert_eq!(result, json!({
-        "id": 123,
-        "name": "test"
-    }));
+    let result = arazzo_exec::executor::eval::eval_value(&json!("$response.body"), &ctx)
+        .await
+        .unwrap();
+    assert_eq!(
+        result,
+        json!({
+            "id": 123,
+            "name": "test"
+        })
+    );
 }
 
 #[tokio::test]
@@ -324,7 +360,9 @@ async fn eval_embedded_template() {
         response: None,
     };
 
-    let result = arazzo_exec::executor::eval::eval_value(&json!("Hello { $inputs.user }!"), &ctx).await.unwrap();
+    let result = arazzo_exec::executor::eval::eval_value(&json!("Hello { $inputs.user }!"), &ctx)
+        .await
+        .unwrap();
     assert_eq!(result, json!("Hello alice!"));
 }
 
@@ -339,7 +377,9 @@ async fn eval_array() {
         response: None,
     };
 
-    let result = arazzo_exec::executor::eval::eval_value(&json!(["$inputs.items", "c"]), &ctx).await.unwrap();
+    let result = arazzo_exec::executor::eval::eval_value(&json!(["$inputs.items", "c"]), &ctx)
+        .await
+        .unwrap();
     assert_eq!(result, json!([["a", "b"], "c"]));
 }
 
@@ -354,13 +394,20 @@ async fn eval_object() {
         response: None,
     };
 
-    let result = arazzo_exec::executor::eval::eval_value(&json!({
-        "title": "Hello { $inputs.name }",
-        "count": 42
-    }), &ctx).await.unwrap();
-    assert_eq!(result, json!({
-        "title": "Hello test",
-        "count": 42
-    }));
+    let result = arazzo_exec::executor::eval::eval_value(
+        &json!({
+            "title": "Hello { $inputs.name }",
+            "count": 42
+        }),
+        &ctx,
+    )
+    .await
+    .unwrap();
+    assert_eq!(
+        result,
+        json!({
+            "title": "Hello test",
+            "count": 42
+        })
+    );
 }
-

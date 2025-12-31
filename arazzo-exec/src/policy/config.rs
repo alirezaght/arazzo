@@ -3,8 +3,7 @@ use std::time::Duration;
 
 use crate::policy::{LimitsConfig, NetworkConfig, SensitiveHeadersConfig};
 
-#[derive(Debug, Clone)]
-#[derive(Default)]
+#[derive(Debug, Clone, Default)]
 pub struct PolicyConfig {
     pub network: NetworkConfig,
     pub limits: LimitsConfig,
@@ -15,7 +14,6 @@ pub struct PolicyConfig {
     /// Per-source overrides keyed by `sourceDescriptions[].name`.
     pub per_source: BTreeMap<String, SourcePolicyConfig>,
 }
-
 
 #[derive(Debug, Clone, Default)]
 pub struct SourcePolicyConfig {
@@ -34,7 +32,11 @@ pub struct PolicyOverrides {
 }
 
 impl PolicyConfig {
-    pub fn effective_for_source(&self, source: &str, overrides: &PolicyOverrides) -> EffectivePolicy {
+    pub fn effective_for_source(
+        &self,
+        source: &str,
+        overrides: &PolicyOverrides,
+    ) -> EffectivePolicy {
         let mut network = self.network.clone();
         let mut limits = self.limits.clone();
         let mut sensitive_headers = self.sensitive_headers.clone();
@@ -86,5 +88,3 @@ pub struct EffectivePolicy {
     pub sensitive_headers: SensitiveHeadersConfig,
     pub allow_secrets_in_url: bool,
 }
-
-

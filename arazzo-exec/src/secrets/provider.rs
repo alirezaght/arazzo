@@ -96,8 +96,8 @@ impl SecretsProvider for FileSecretsProvider {
             return Err(SecretError::NotFound(secret_ref.clone()));
         }
         let path = self.base_dir.join(&secret_ref.id);
-        let bytes = std::fs::read(&path).map_err(|e| SecretError::provider(secret_ref.clone(), e.to_string()))?;
+        let bytes = std::fs::read(&path)
+            .map_err(|e| SecretError::provider(secret_ref.clone(), e.to_string()))?;
         Ok(SecretValue::from_bytes(bytes))
     }
 }
-

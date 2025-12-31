@@ -184,5 +184,3 @@ fn extract_source_from_templated_op_path(operation_path: &str) -> Option<String>
     }
     None
 }
-
-

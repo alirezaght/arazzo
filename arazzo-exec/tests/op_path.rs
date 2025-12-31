@@ -29,11 +29,12 @@ fn parse_operation_path_ref_missing_source_template() {
 
 #[test]
 fn parse_operation_path_ref_invalid_pointer() {
-    let result = parse_operation_path_ref(
-        "{$sourceDescriptions.petStoreDescription.url}#/invalid/path",
-    );
+    let result =
+        parse_operation_path_ref("{$sourceDescriptions.petStoreDescription.url}#/invalid/path");
     assert!(result.is_err());
-    assert!(result.unwrap_err().contains("operationPath pointer must point"));
+    assert!(result
+        .unwrap_err()
+        .contains("operationPath pointer must point"));
 }
 
 #[test]
@@ -58,4 +59,3 @@ fn parse_operation_path_ref_complex_path() {
 
     assert_eq!(result.3, "/users/{userId}/orders");
 }
-

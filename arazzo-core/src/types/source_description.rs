@@ -19,4 +19,3 @@ pub struct SourceDescription {
     #[serde(flatten, default)]
     pub extensions: Extensions,
 }
-

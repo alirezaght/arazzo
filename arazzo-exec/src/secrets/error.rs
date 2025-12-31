@@ -28,4 +28,3 @@ pub enum SecretPolicyError {
         placement: super::policy::SecretPlacement,
     },
 }
-

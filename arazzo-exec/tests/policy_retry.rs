@@ -2,7 +2,7 @@ use std::collections::BTreeMap;
 use std::time::{Duration, SystemTime};
 
 use arazzo_exec::policy::{HttpRequestParts, PolicyConfig, PolicyGate};
-use arazzo_exec::retry::{RetryConfig, decide_retry, RetryDecision, RetryReason};
+use arazzo_exec::retry::{decide_retry, RetryConfig, RetryDecision, RetryReason};
 
 fn req(url: &str, body_len: usize) -> HttpRequestParts {
     HttpRequestParts {
@@ -94,6 +94,10 @@ fn retry_stops_on_policy_failure() {
         SystemTime::UNIX_EPOCH,
         || 0,
     );
-    assert!(matches!(d, RetryDecision::Stop { reason: RetryReason::PolicyFailure }));
+    assert!(matches!(
+        d,
+        RetryDecision::Stop {
+            reason: RetryReason::PolicyFailure
+        }
+    ));
 }
-

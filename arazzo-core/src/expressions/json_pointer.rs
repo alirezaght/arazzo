@@ -12,7 +12,9 @@ impl JsonPointer {
         // Accept either "" (whole document) or a proper pointer "/a/b" or "#/a/b" style.
         // In Arazzo runtime expressions, we expect the `#` is handled outside and the pointer is the part after `#`.
         if fragment.is_empty() {
-            return Ok(Self { raw: fragment.to_string() });
+            return Ok(Self {
+                raw: fragment.to_string(),
+            });
         }
         if !fragment.starts_with('/') {
             return Err(JsonPointerError::InvalidPrefix);
@@ -29,7 +31,9 @@ impl JsonPointer {
             }
         }
 
-        Ok(Self { raw: fragment.to_string() })
+        Ok(Self {
+            raw: fragment.to_string(),
+        })
     }
 }
 
@@ -40,4 +44,3 @@ pub enum JsonPointerError {
     #[error("json pointer contains invalid escape (only ~0 and ~1 are allowed)")]
     InvalidEscape,
 }
-

@@ -29,7 +29,10 @@ pub(crate) fn validate_success_action_list(
                 match a.action_type {
                     SuccessActionType::End => {
                         if a.workflow_id.is_some() || a.step_id.is_some() {
-                            v.push(ipath.as_str(), "type=end must not specify workflowId or stepId");
+                            v.push(
+                                ipath.as_str(),
+                                "type=end must not specify workflowId or stepId",
+                            );
                         }
                     }
                     SuccessActionType::Goto => {
@@ -43,7 +46,11 @@ pub(crate) fn validate_success_action_list(
                         }
                         if let Some(workflow_id) = &a.workflow_id {
                             if workflow_id.trim().starts_with('$') {
-                                validate_runtime_expr(v, &format!("{ipath}.workflowId"), workflow_id.trim());
+                                validate_runtime_expr(
+                                    v,
+                                    &format!("{ipath}.workflowId"),
+                                    workflow_id.trim(),
+                                );
                             }
                         }
                         if let (Some(step_id), Some(step_ids)) = (a.step_id.as_ref(), step_ids) {
@@ -112,7 +119,10 @@ pub(crate) fn validate_failure_action_list(
                     }
                     FailureActionType::Goto => {
                         if a.retry_after_seconds.is_some() || a.retry_limit.is_some() {
-                            v.push(ipath.clone(), "type=goto must not specify retryAfter or retryLimit");
+                            v.push(
+                                ipath.clone(),
+                                "type=goto must not specify retryAfter or retryLimit",
+                            );
                         }
                         let has_workflow = a.workflow_id.is_some();
                         let has_step = a.step_id.is_some();
@@ -124,7 +134,11 @@ pub(crate) fn validate_failure_action_list(
                         }
                         if let Some(workflow_id) = &a.workflow_id {
                             if workflow_id.trim().starts_with('$') {
-                                validate_runtime_expr(v, &format!("{ipath}.workflowId"), workflow_id.trim());
+                                validate_runtime_expr(
+                                    v,
+                                    &format!("{ipath}.workflowId"),
+                                    workflow_id.trim(),
+                                );
                             }
                         }
                         if let (Some(step_id), Some(step_ids)) = (a.step_id.as_ref(), step_ids) {
@@ -152,7 +166,11 @@ pub(crate) fn validate_failure_action_list(
                         }
                         if let Some(workflow_id) = &a.workflow_id {
                             if workflow_id.trim().starts_with('$') {
-                                validate_runtime_expr(v, &format!("{ipath}.workflowId"), workflow_id.trim());
+                                validate_runtime_expr(
+                                    v,
+                                    &format!("{ipath}.workflowId"),
+                                    workflow_id.trim(),
+                                );
                             }
                         }
                         if let (Some(step_id), Some(step_ids)) = (a.step_id.as_ref(), step_ids) {
@@ -186,4 +204,3 @@ pub(crate) fn validate_failure_action_list(
         }
     }
 }
-

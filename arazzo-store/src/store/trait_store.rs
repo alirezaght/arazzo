@@ -67,7 +67,7 @@ pub trait StateStore: Send + Sync {
     ) -> Result<(), StoreError>;
 
     async fn mark_run_started(&self, run_id: Uuid) -> Result<(), StoreError>;
-    
+
     async fn mark_run_finished(
         &self,
         run_id: Uuid,
@@ -86,7 +86,12 @@ pub trait StateStore: Send + Sync {
 
     async fn get_step_attempts(&self, run_step_id: Uuid) -> Result<Vec<StepAttempt>, StoreError>;
 
-    async fn get_events_after(&self, run_id: Uuid, after_id: i64, limit: i64) -> Result<Vec<RunEvent>, StoreError>;
+    async fn get_events_after(
+        &self,
+        run_id: Uuid,
+        after_id: i64,
+        limit: i64,
+    ) -> Result<Vec<RunEvent>, StoreError>;
 
     async fn check_run_status(&self, run_id: Uuid) -> Result<String, StoreError>;
 }
@@ -102,4 +107,3 @@ impl From<sqlx::Error> for StoreError {
         StoreError::Other(e.to_string())
     }
 }
-

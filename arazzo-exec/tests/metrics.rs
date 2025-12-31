@@ -95,4 +95,3 @@ fn metrics_to_json() {
     assert_eq!(json["steps"]["succeeded"], 1);
     assert_eq!(json["http"]["requests"], 1);
 }
-

@@ -1,15 +1,19 @@
 use std::path::Path;
 use std::sync::Arc;
 
-use arazzo_core::{DocumentFormat, PlanOptions, parse_document_str, plan_document};
+use arazzo_core::{parse_document_str, plan_document, DocumentFormat, PlanOptions};
 use serde::Serialize;
 use uuid::Uuid;
 
 use crate::exit_codes;
-use crate::output::{OutputFormat, print_error, print_result};
-use crate::{ConcurrencyArgs, OpenApiArgs, OutputArgs, PolicyArgs, RetryArgs, SecretsArgs, StoreArgs};
+use crate::output::{print_error, print_result, OutputFormat};
+use crate::{
+    ConcurrencyArgs, OpenApiArgs, OutputArgs, PolicyArgs, RetryArgs, SecretsArgs, StoreArgs,
+};
 
-use super::config::{build_executor_config, build_policy_config, get_database_url, load_inputs, merge_set_inputs};
+use super::config::{
+    build_executor_config, build_policy_config, get_database_url, load_inputs, merge_set_inputs,
+};
 use crate::utils::redact_url_password;
 
 #[derive(Serialize)]
@@ -43,7 +47,11 @@ pub async fn execute_cmd(
     let content = match std::fs::read_to_string(path) {
         Ok(v) => v,
         Err(e) => {
-            print_error(output.format, output.quiet, &format!("failed to read {}: {e}", path.display()));
+            print_error(
+                output.format,
+                output.quiet,
+                &format!("failed to read {}: {e}", path.display()),
+            );
             return exit_codes::RUNTIME_ERROR;
         }
     };
@@ -62,10 +70,13 @@ pub async fn execute_cmd(
     }
     merge_set_inputs(&mut inputs, set_inputs);
 
-    let outcome = match plan_document(&parsed.document, PlanOptions {
-        workflow_id: workflow_id.map(String::from),
-        inputs: inputs.clone(),
-    }) {
+    let outcome = match plan_document(
+        &parsed.document,
+        PlanOptions {
+            workflow_id: workflow_id.map(String::from),
+            inputs: inputs.clone(),
+        },
+    ) {
         Ok(o) => o,
         Err(e) => {
             print_error(output.format, output.quiet, &format!("{e}"));
@@ -86,7 +97,12 @@ pub async fn execute_cmd(
         }
     };
 
-    let wf = match parsed.document.workflows.iter().find(|w| w.workflow_id == plan.summary.workflow_id) {
+    let wf = match parsed
+        .document
+        .workflows
+        .iter()
+        .find(|w| w.workflow_id == plan.summary.workflow_id)
+    {
         Some(w) => w,
         None => {
             print_error(output.format, output.quiet, "workflow not found");
@@ -94,8 +110,14 @@ pub async fn execute_cmd(
         }
     };
 
-    let compiled = arazzo_exec::Compiler::default().compile_workflow(&parsed.document, wf).await;
-    if compiled.diagnostics.iter().any(|d| d.severity == arazzo_exec::openapi::DiagnosticSeverity::Error) {
+    let compiled = arazzo_exec::Compiler::default()
+        .compile_workflow(&parsed.document, wf)
+        .await;
+    if compiled
+        .diagnostics
+        .iter()
+        .any(|d| d.severity == arazzo_exec::openapi::DiagnosticSeverity::Error)
+    {
         print_error(output.format, output.quiet, "OpenAPI compilation failed");
         return exit_codes::VALIDATION_FAILED;
     }
@@ -116,7 +138,11 @@ pub async fn execute_cmd(
 
     if let Some(id) = run_id {
         if Uuid::parse_str(id).is_err() {
-            print_error(output.format, output.quiet, &format!("invalid run_id: {id}"));
+            print_error(
+                output.format,
+                output.quiet,
+                &format!("invalid run_id: {id}"),
+            );
             return exit_codes::RUNTIME_ERROR;
         }
     }
@@ -124,124 +150,177 @@ pub async fn execute_cmd(
     let exec_config = build_executor_config(&concurrency, &retry);
     let secrets_provider: Arc<dyn arazzo_exec::secrets::SecretsProvider> =
         Arc::new(arazzo_exec::secrets::EnvSecretsProvider::default());
-    let policy_gate = Arc::new(arazzo_exec::policy::PolicyGate::new(build_policy_config(&policy)));
+    let policy_gate = Arc::new(arazzo_exec::policy::PolicyGate::new(build_policy_config(
+        &policy,
+    )));
     let http_client: Arc<dyn arazzo_exec::executor::HttpClient> =
         Arc::new(arazzo_exec::executor::http::ReqwestHttpClient::default());
     let store_arc: Arc<dyn arazzo_store::StateStore> = Arc::new(pg);
-    
+
     let total_steps = plan.steps.len();
     let show_progress = output.format == OutputFormat::Text && !output.quiet;
     let progress_sink: Option<Arc<super::progress::ProgressEventSink>> = if show_progress {
-        Some(Arc::new(super::progress::ProgressEventSink::new(total_steps)))
+        Some(Arc::new(super::progress::ProgressEventSink::new(
+            total_steps,
+        )))
     } else {
         None
     };
-    
+
     let base_event_sink: Arc<dyn arazzo_exec::executor::EventSink> = match events {
         "none" => Arc::new(arazzo_exec::executor::NoOpEventSink),
         "stdout" => Arc::new(arazzo_exec::executor::StdoutEventSink),
-        "postgres" => Arc::new(arazzo_exec::executor::StoreEventSink::new(store_arc.clone())),
+        "postgres" => Arc::new(arazzo_exec::executor::StoreEventSink::new(
+            store_arc.clone(),
+        )),
         "both" => Arc::new(arazzo_exec::executor::BothEventSink::new(store_arc.clone())),
         _ => {
-            print_error(output.format, output.quiet, &format!("unknown event sink: {events}"));
+            print_error(
+                output.format,
+                output.quiet,
+                &format!("unknown event sink: {events}"),
+            );
             return exit_codes::RUNTIME_ERROR;
         }
     };
-    
-    let event_sink: Arc<dyn arazzo_exec::executor::EventSink> = if let Some(webhook_url) = &webhook.webhook_url {
-        let webhook_sink = Arc::new(arazzo_exec::executor::WebhookEventSink::new(
-            webhook_url.clone(),
-            http_client.clone(),
-            base_event_sink.clone(),
-        ));
-        if let Some(progress) = progress_sink {
-            Arc::new(super::progress::CompositeProgressSink::new(progress, webhook_sink))
-        } else {
-            webhook_sink
-        }
-    } else if let Some(progress) = progress_sink {
-        Arc::new(super::progress::CompositeProgressSink::new(progress, base_event_sink))
-    } else {
-        base_event_sink
-    };
 
-    use sha2::{Sha256, Digest};
+    let event_sink: Arc<dyn arazzo_exec::executor::EventSink> =
+        if let Some(webhook_url) = &webhook.webhook_url {
+            let webhook_sink = Arc::new(arazzo_exec::executor::WebhookEventSink::new(
+                webhook_url.clone(),
+                http_client.clone(),
+                base_event_sink.clone(),
+            ));
+            if let Some(progress) = progress_sink {
+                Arc::new(super::progress::CompositeProgressSink::new(
+                    progress,
+                    webhook_sink,
+                ))
+            } else {
+                webhook_sink
+            }
+        } else if let Some(progress) = progress_sink {
+            Arc::new(super::progress::CompositeProgressSink::new(
+                progress,
+                base_event_sink,
+            ))
+        } else {
+            base_event_sink
+        };
+
+    use sha2::{Digest, Sha256};
     let mut hasher = Sha256::new();
     hasher.update(content.as_bytes());
     let doc_hash = hex::encode(hasher.finalize());
     let workflow_doc_json = match serde_json::to_value(&parsed.document) {
         Ok(v) => v,
         Err(e) => {
-            print_error(output.format, output.quiet, &format!("failed to serialize workflow document: {e}"));
+            print_error(
+                output.format,
+                output.quiet,
+                &format!("failed to serialize workflow document: {e}"),
+            );
             return exit_codes::RUNTIME_ERROR;
         }
     };
-    let workflow_doc = match store_arc.upsert_workflow_doc(arazzo_store::NewWorkflowDoc {
-        doc_hash,
-        format: arazzo_store::DocFormat::Yaml,
-        raw: content.clone(),
-        doc: workflow_doc_json,
-    }).await {
+    let workflow_doc = match store_arc
+        .upsert_workflow_doc(arazzo_store::NewWorkflowDoc {
+            doc_hash,
+            format: arazzo_store::DocFormat::Yaml,
+            raw: content.clone(),
+            doc: workflow_doc_json,
+        })
+        .await
+    {
         Ok(doc) => doc,
         Err(e) => {
-            print_error(output.format, output.quiet, &format!("failed to store workflow doc: {e}"));
+            print_error(
+                output.format,
+                output.quiet,
+                &format!("failed to store workflow doc: {e}"),
+            );
             return exit_codes::RUNTIME_ERROR;
         }
     };
 
     let executor = arazzo_exec::Executor::new(
-        exec_config, store_arc.clone(), http_client, secrets_provider, policy_gate, event_sink,
+        exec_config,
+        store_arc.clone(),
+        http_client,
+        secrets_provider,
+        policy_gate,
+        event_sink,
     );
 
     let run_inputs = inputs.clone().unwrap_or(serde_json::json!({}));
-    let steps: Vec<arazzo_store::NewStep> = plan.steps.iter().enumerate().map(|(idx, s)| {
-        arazzo_store::NewStep {
+    let steps: Vec<arazzo_store::NewStep> = plan
+        .steps
+        .iter()
+        .enumerate()
+        .map(|(idx, s)| arazzo_store::NewStep {
             step_id: s.step_id.clone(),
             step_index: idx as i32,
             source_name: None,
             operation_id: match &s.operation {
-                arazzo_core::PlanOperationRef::OperationId { operation_id, .. } => Some(operation_id.clone()),
+                arazzo_core::PlanOperationRef::OperationId { operation_id, .. } => {
+                    Some(operation_id.clone())
+                }
                 _ => None,
             },
             depends_on: s.depends_on.clone(),
-        }
-    }).collect();
-
-    let edges: Vec<arazzo_store::RunStepEdge> = steps.iter().flat_map(|s| {
-        s.depends_on.iter().map(|dep| arazzo_store::RunStepEdge {
-            from_step_id: dep.clone(),
-            to_step_id: s.step_id.clone(),
         })
-    }).collect();
+        .collect();
 
-    let actual_run_id = match store_arc.create_run_and_steps(
-        arazzo_store::NewRun {
-            workflow_doc_id: workflow_doc.id,
-            workflow_id: plan.summary.workflow_id.clone(),
-            created_by: None,
-            idempotency_key: idempotency_key.map(String::from),
-            inputs: run_inputs.clone(),
-            overrides: serde_json::json!({}),
-        },
-        steps.iter().map(|s| arazzo_store::NewRunStep {
-            step_id: s.step_id.clone(),
-            step_index: s.step_index,
-            source_name: s.source_name.clone(),
-            operation_id: s.operation_id.clone(),
-            depends_on: s.depends_on.clone(),
-        }).collect(),
-        edges,
-    ).await {
+    let edges: Vec<arazzo_store::RunStepEdge> = steps
+        .iter()
+        .flat_map(|s| {
+            s.depends_on.iter().map(|dep| arazzo_store::RunStepEdge {
+                from_step_id: dep.clone(),
+                to_step_id: s.step_id.clone(),
+            })
+        })
+        .collect();
+
+    let actual_run_id = match store_arc
+        .create_run_and_steps(
+            arazzo_store::NewRun {
+                workflow_doc_id: workflow_doc.id,
+                workflow_id: plan.summary.workflow_id.clone(),
+                created_by: None,
+                idempotency_key: idempotency_key.map(String::from),
+                inputs: run_inputs.clone(),
+                overrides: serde_json::json!({}),
+            },
+            steps
+                .iter()
+                .map(|s| arazzo_store::NewRunStep {
+                    step_id: s.step_id.clone(),
+                    step_index: s.step_index,
+                    source_name: s.source_name.clone(),
+                    operation_id: s.operation_id.clone(),
+                    depends_on: s.depends_on.clone(),
+                })
+                .collect(),
+            edges,
+        )
+        .await
+    {
         Ok(id) => id,
         Err(e) => {
-            print_error(output.format, output.quiet, &format!("failed to create run: {e}"));
+            print_error(
+                output.format,
+                output.quiet,
+                &format!("failed to create run: {e}"),
+            );
             return exit_codes::RUNTIME_ERROR;
         }
     };
 
     let run_uuid = actual_run_id;
 
-    let result = executor.execute_run(run_uuid, wf, &compiled, &run_inputs, Some(&parsed.document)).await;
+    let result = executor
+        .execute_run(run_uuid, wf, &compiled, &run_inputs, Some(&parsed.document))
+        .await;
 
     match result {
         Ok(exec_result) => {
@@ -259,7 +338,11 @@ pub async fn execute_cmd(
             } else {
                 print_result(output.format, output.quiet, &res);
             }
-            if res.steps_failed > 0 { exit_codes::RUN_FAILED } else { exit_codes::SUCCESS }
+            if res.steps_failed > 0 {
+                exit_codes::RUN_FAILED
+            } else {
+                exit_codes::SUCCESS
+            }
         }
         Err(e) => {
             let res = ExecuteResult {

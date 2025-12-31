@@ -8,12 +8,10 @@ pub enum SecretPlacement {
     UrlQuery,
 }
 
-#[derive(Debug, Clone)]
-#[derive(Default)]
+#[derive(Debug, Clone, Default)]
 pub struct SecretsPolicy {
     pub allow_secrets_in_url: bool,
 }
-
 
 impl SecretsPolicy {
     pub fn ensure_allowed(
@@ -36,4 +34,3 @@ impl SecretsPolicy {
         }
     }
 }
-

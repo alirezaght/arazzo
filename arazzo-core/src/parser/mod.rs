@@ -14,7 +14,10 @@ pub struct ParsedDocument {
     pub format: DocumentFormat,
 }
 
-pub fn parse_document_str(input: &str, format: DocumentFormat) -> Result<ParsedDocument, ParseError> {
+pub fn parse_document_str(
+    input: &str,
+    format: DocumentFormat,
+) -> Result<ParsedDocument, ParseError> {
     match format {
         DocumentFormat::Json => Ok(ParsedDocument {
             document: serde_json::from_str::<ArazzoDocument>(input)?,
@@ -59,12 +62,10 @@ fn parse_document_auto(input: &str) -> Result<ParsedDocument, ParseError> {
 
     // Try YAML first for non-JSON-looking input
     match serde_yaml::from_str::<ArazzoDocument>(input) {
-        Ok(doc) => {
-            Ok(ParsedDocument {
-                document: doc,
-                format: DocumentFormat::Yaml,
-            })
-        }
+        Ok(doc) => Ok(ParsedDocument {
+            document: doc,
+            format: DocumentFormat::Yaml,
+        }),
         Err(e) => {
             // If YAML fails, try JSON as fallback
             if let Ok(doc) = serde_json::from_str::<ArazzoDocument>(input) {
@@ -78,4 +79,3 @@ fn parse_document_auto(input: &str) -> Result<ParsedDocument, ParseError> {
         }
     }
 }
-

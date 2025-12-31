@@ -34,11 +34,7 @@ pub struct StepDeps {
     pub event_sink: Arc<dyn EventSink>,
 }
 
-pub async fn run_step(
-    ctx: StepContext,
-    deps: StepDeps,
-    _permit: ConcurrencyPermit,
-) -> StepResult {
+pub async fn run_step(ctx: StepContext, deps: StepDeps, _permit: ConcurrencyPermit) -> StepResult {
     deps.event_sink
         .emit(Event::StepStarted {
             run_id: ctx.run_id,
@@ -72,12 +68,7 @@ pub async fn run_step(
     result
 }
 
-async fn apply_result(
-    deps: &StepDeps,
-    run_id: Uuid,
-    step_id: &str,
-    result: &StepResult,
-) {
+async fn apply_result(deps: &StepDeps, run_id: Uuid, step_id: &str, result: &StepResult) {
     match result {
         StepResult::Succeeded { outputs } => {
             deps.store
@@ -124,4 +115,3 @@ async fn apply_result(
         }
     }
 }
-

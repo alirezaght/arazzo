@@ -1,11 +1,14 @@
 use std::path::Path;
 
-use arazzo_core::{DocumentFormat, PlanOptions, PlanningOutcome, PlanOperationRef, parse_document_str, plan_document};
+use arazzo_core::{
+    parse_document_str, plan_document, DocumentFormat, PlanOperationRef, PlanOptions,
+    PlanningOutcome,
+};
 use serde::Serialize;
 
 use crate::exit_codes;
-use crate::output::{OutputFormat, print_error};
-use crate::{OutputArgs, OpenApiArgs};
+use crate::output::{print_error, OutputFormat};
+use crate::{OpenApiArgs, OutputArgs};
 
 pub async fn plan_cmd(
     path: &Path,
@@ -18,7 +21,11 @@ pub async fn plan_cmd(
     let content = match std::fs::read_to_string(path) {
         Ok(v) => v,
         Err(e) => {
-            print_error(output.format, output.quiet, &format!("failed to read {}: {e}", path.display()));
+            print_error(
+                output.format,
+                output.quiet,
+                &format!("failed to read {}: {e}", path.display()),
+            );
             return exit_codes::RUNTIME_ERROR;
         }
     };
@@ -62,12 +69,23 @@ pub async fn plan_cmd(
                 {
                     Some(w) => w,
                     None => {
-                        print_error(output.format, output.quiet, &format!("workflow '{}' not found in document", plan.summary.workflow_id));
+                        print_error(
+                            output.format,
+                            output.quiet,
+                            &format!(
+                                "workflow '{}' not found in document",
+                                plan.summary.workflow_id
+                            ),
+                        );
                         return exit_codes::VALIDATION_FAILED;
                     }
                 };
 
-                Some(arazzo_exec::Compiler::default().compile_workflow(&parsed.document, wf).await)
+                Some(
+                    arazzo_exec::Compiler::default()
+                        .compile_workflow(&parsed.document, wf)
+                        .await,
+                )
             }
         }
     } else {
@@ -88,7 +106,11 @@ struct PlanJsonOutput<'a> {
     compiled: Option<&'a arazzo_exec::CompiledPlan>,
 }
 
-fn print_json(outcome: &PlanningOutcome, compiled: Option<&arazzo_exec::CompiledPlan>, quiet: bool) -> i32 {
+fn print_json(
+    outcome: &PlanningOutcome,
+    compiled: Option<&arazzo_exec::CompiledPlan>,
+    quiet: bool,
+) -> i32 {
     if quiet {
         return if outcome.validation.is_valid && !compiled_has_errors(compiled) {
             exit_codes::SUCCESS
@@ -96,7 +118,10 @@ fn print_json(outcome: &PlanningOutcome, compiled: Option<&arazzo_exec::Compiled
             exit_codes::VALIDATION_FAILED
         };
     }
-    let payload = PlanJsonOutput { logical: outcome, compiled };
+    let payload = PlanJsonOutput {
+        logical: outcome,
+        compiled,
+    };
     match serde_json::to_string_pretty(&payload) {
         Ok(s) => {
             println!("{s}");
@@ -112,7 +137,11 @@ fn print_json(outcome: &PlanningOutcome, compiled: Option<&arazzo_exec::Compiled
     }
 }
 
-fn print_text(outcome: &PlanningOutcome, compiled: Option<&arazzo_exec::CompiledPlan>, quiet: bool) -> i32 {
+fn print_text(
+    outcome: &PlanningOutcome,
+    compiled: Option<&arazzo_exec::CompiledPlan>,
+    quiet: bool,
+) -> i32 {
     if quiet {
         return if outcome.validation.is_valid && !compiled_has_errors(compiled) {
             exit_codes::SUCCESS
@@ -132,13 +161,26 @@ fn print_text(outcome: &PlanningOutcome, compiled: Option<&arazzo_exec::Compiled
         return exit_codes::VALIDATION_FAILED;
     }
 
-    let Some(plan) = &outcome.plan else { return exit_codes::VALIDATION_FAILED; };
+    let Some(plan) = &outcome.plan else {
+        return exit_codes::VALIDATION_FAILED;
+    };
 
     if !plan.summary.workflow_depends_on.is_empty() {
-        println!("workflow dependsOn: {}", plan.summary.workflow_depends_on.join(", "));
+        println!(
+            "workflow dependsOn: {}",
+            plan.summary.workflow_depends_on.join(", ")
+        );
     }
     if !plan.summary.missing_inputs.is_empty() {
-        println!("missing inputs: {}", plan.summary.missing_inputs.iter().cloned().collect::<Vec<_>>().join(", "));
+        println!(
+            "missing inputs: {}",
+            plan.summary
+                .missing_inputs
+                .iter()
+                .cloned()
+                .collect::<Vec<_>>()
+                .join(", ")
+        );
     }
 
     println!("\nexecution levels:");
@@ -155,13 +197,19 @@ fn print_text(outcome: &PlanningOutcome, compiled: Option<&arazzo_exec::Compiled
             println!("  dependsOn: {}", s.depends_on.join(", "));
         }
         match &s.operation {
-            PlanOperationRef::OperationId { operation_id, source } => {
+            PlanOperationRef::OperationId {
+                operation_id,
+                source,
+            } => {
                 if let Some(source) = source {
                     println!("  source: {source}");
                 }
                 println!("  operationId: {operation_id}");
             }
-            PlanOperationRef::OperationPath { operation_path, source } => {
+            PlanOperationRef::OperationPath {
+                operation_path,
+                source,
+            } => {
                 if let Some(source) = source {
                     println!("  source: {source}");
                 }
@@ -222,9 +270,18 @@ fn print_dot(outcome: &PlanningOutcome, quiet: bool) -> i32 {
 }
 
 fn compiled_has_errors(compiled: Option<&arazzo_exec::CompiledPlan>) -> bool {
-    let Some(c) = compiled else { return false; };
-    if c.diagnostics.iter().any(|d| d.severity == arazzo_exec::openapi::DiagnosticSeverity::Error) {
+    let Some(c) = compiled else {
+        return false;
+    };
+    if c.diagnostics
+        .iter()
+        .any(|d| d.severity == arazzo_exec::openapi::DiagnosticSeverity::Error)
+    {
         return true;
     }
-    c.steps.iter().any(|s| s.diagnostics.iter().any(|d| d.severity == arazzo_exec::openapi::DiagnosticSeverity::Error))
+    c.steps.iter().any(|s| {
+        s.diagnostics
+            .iter()
+            .any(|d| d.severity == arazzo_exec::openapi::DiagnosticSeverity::Error)
+    })
 }

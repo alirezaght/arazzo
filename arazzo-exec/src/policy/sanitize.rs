@@ -35,7 +35,11 @@ pub(crate) fn sanitize_headers(
     secret_derived_headers: &[String],
 ) -> SanitizedHeaders {
     let mut out = headers.clone();
-    for name in sensitive.always_redact.iter().chain(secret_derived_headers.iter()) {
+    for name in sensitive
+        .always_redact
+        .iter()
+        .chain(secret_derived_headers.iter())
+    {
         redact_case_insensitive(&mut out, name);
     }
     SanitizedHeaders { headers: out }
@@ -74,4 +78,3 @@ fn redact_case_insensitive(map: &mut BTreeMap<String, String>, header_lower: &st
         map.insert(k, "<redacted>".to_string());
     }
 }
-

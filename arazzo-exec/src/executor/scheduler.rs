@@ -33,7 +33,14 @@ impl Executor {
         policy_gate: Arc<PolicyGate>,
         event_sink: Arc<dyn EventSink>,
     ) -> Self {
-        Self { config, store, http, secrets, policy_gate, event_sink }
+        Self {
+            config,
+            store,
+            http,
+            secrets,
+            policy_gate,
+            event_sink,
+        }
     }
 
     pub async fn execute_run(
@@ -64,7 +71,11 @@ impl Executor {
                 continue;
             }
 
-            let handles = self.spawn_steps(run_id, &claimed, workflow, compiled, inputs, &limits, document).await?;
+            let handles = self
+                .spawn_steps(
+                    run_id, &claimed, workflow, compiled, inputs, &limits, document,
+                )
+                .await?;
             self.collect_results(handles, &mut result).await?;
         }
 
@@ -73,7 +84,10 @@ impl Executor {
 
     async fn emit_run_started(&self, run_id: Uuid, workflow: &Workflow) {
         self.event_sink
-            .emit(Event::RunStarted { run_id, workflow_id: workflow.workflow_id.clone() })
+            .emit(Event::RunStarted {
+                run_id,
+                workflow_id: workflow.workflow_id.clone(),
+            })
             .await;
     }
 
@@ -83,7 +97,10 @@ impl Executor {
             .await;
     }
 
-    async fn claim_steps(&self, run_id: Uuid) -> Result<Vec<arazzo_store::RunStep>, ExecutionError> {
+    async fn claim_steps(
+        &self,
+        run_id: Uuid,
+    ) -> Result<Vec<arazzo_store::RunStep>, ExecutionError> {
         self.store
             .claim_runnable_steps(run_id, self.config.global_concurrency as i64)
             .await
@@ -91,32 +108,44 @@ impl Executor {
     }
 
     async fn is_run_complete(&self, run_id: Uuid) -> Result<bool, ExecutionError> {
-        let runnable = self.store.claim_runnable_steps(run_id, 1).await.map_err(ExecutionError::Store)?;
+        let runnable = self
+            .store
+            .claim_runnable_steps(run_id, 1)
+            .await
+            .map_err(ExecutionError::Store)?;
         if !runnable.is_empty() {
             return Ok(false);
         }
-        
-        let all_steps = self.store.get_run_steps(run_id).await.map_err(ExecutionError::Store)?;
+
+        let all_steps = self
+            .store
+            .get_run_steps(run_id)
+            .await
+            .map_err(ExecutionError::Store)?;
         if all_steps.is_empty() {
             return Ok(false);
         }
-        
-        let all_terminal = all_steps.iter().all(|s| {
-            matches!(s.status.as_str(), "succeeded" | "failed" | "skipped")
-        });
-        
+
+        let all_terminal = all_steps
+            .iter()
+            .all(|s| matches!(s.status.as_str(), "succeeded" | "failed" | "skipped"));
+
         if all_terminal {
             if let Ok(Some(run)) = self.store.get_run(run_id).await {
                 if matches!(run.status.as_str(), "pending" | "queued" | "running") {
-                    let _ = self.store.mark_run_finished(run_id, RunStatus::Succeeded, None).await;
+                    let _ = self
+                        .store
+                        .mark_run_finished(run_id, RunStatus::Succeeded, None)
+                        .await;
                 }
             }
             return Ok(true);
         }
-        
+
         Ok(false)
     }
 
+    #[allow(clippy::too_many_arguments)]
     async fn spawn_steps(
         &self,
         run_id: Uuid,

@@ -1,5 +1,7 @@
 use crate::types::Components;
-use crate::validate::rules::common::{validate_map_keys, validate_runtime_expr, validate_value_exprs};
+use crate::validate::rules::common::{
+    validate_map_keys, validate_runtime_expr, validate_value_exprs,
+};
 use crate::validate::rules::criteria::validate_criteria_list;
 use crate::validate::validator::Validator;
 
@@ -25,7 +27,11 @@ pub(crate) fn validate_components(v: &mut Validator, components: &Components, pa
             if a.action_type == crate::types::SuccessActionType::Goto {
                 if let Some(workflow_id) = &a.workflow_id {
                     if workflow_id.trim().starts_with('$') {
-                        validate_runtime_expr(v, &format!("{apath}.workflowId"), workflow_id.trim());
+                        validate_runtime_expr(
+                            v,
+                            &format!("{apath}.workflowId"),
+                            workflow_id.trim(),
+                        );
                     }
                 }
             }
@@ -50,4 +56,3 @@ pub(crate) fn validate_components(v: &mut Validator, components: &Components, pa
         }
     }
 }
-

@@ -18,4 +18,3 @@ pub struct ArazzoDocument {
     #[serde(flatten, default)]
     pub extensions: Extensions,
 }
-

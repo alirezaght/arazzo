@@ -1,10 +1,12 @@
 use std::collections::BTreeMap;
 
 use arazzo_core::types::Step;
-use arazzo_exec::executor::response::{compute_outputs, evaluate_success, parse_body_json, request_to_json, response_to_json};
 use arazzo_exec::executor::eval::ResponseContext;
-use arazzo_exec::policy::{HttpResponseParts, RequestGateResult, ResponseGateResult};
+use arazzo_exec::executor::response::{
+    compute_outputs, evaluate_success, parse_body_json, request_to_json, response_to_json,
+};
 use arazzo_exec::policy::sanitize::{SanitizedBody, SanitizedHeaders};
+use arazzo_exec::policy::{HttpResponseParts, RequestGateResult, ResponseGateResult};
 use arazzo_store::StateStore;
 use async_trait::async_trait;
 use serde_json::json;
@@ -101,10 +103,7 @@ impl StateStore for MockStore {
         unimplemented!()
     }
 
-    async fn mark_run_started(
-        &self,
-        _run_id: uuid::Uuid,
-    ) -> Result<(), arazzo_store::StoreError> {
+    async fn mark_run_started(&self, _run_id: uuid::Uuid) -> Result<(), arazzo_store::StoreError> {
         unimplemented!()
     }
 
@@ -124,11 +123,17 @@ impl StateStore for MockStore {
         unimplemented!()
     }
 
-    async fn get_run(&self, _run_id: uuid::Uuid) -> Result<Option<arazzo_store::WorkflowRun>, arazzo_store::StoreError> {
+    async fn get_run(
+        &self,
+        _run_id: uuid::Uuid,
+    ) -> Result<Option<arazzo_store::WorkflowRun>, arazzo_store::StoreError> {
         unimplemented!()
     }
 
-    async fn get_run_steps(&self, _run_id: uuid::Uuid) -> Result<Vec<arazzo_store::RunStep>, arazzo_store::StoreError> {
+    async fn get_run_steps(
+        &self,
+        _run_id: uuid::Uuid,
+    ) -> Result<Vec<arazzo_store::RunStep>, arazzo_store::StoreError> {
         unimplemented!()
     }
 
@@ -139,15 +144,26 @@ impl StateStore for MockStore {
         unimplemented!()
     }
 
-    async fn get_step_attempts(&self, _run_step_id: uuid::Uuid) -> Result<Vec<arazzo_store::StepAttempt>, arazzo_store::StoreError> {
+    async fn get_step_attempts(
+        &self,
+        _run_step_id: uuid::Uuid,
+    ) -> Result<Vec<arazzo_store::StepAttempt>, arazzo_store::StoreError> {
         unimplemented!()
     }
 
-    async fn get_events_after(&self, _run_id: uuid::Uuid, _after_id: i64, _limit: i64) -> Result<Vec<arazzo_store::RunEvent>, arazzo_store::StoreError> {
+    async fn get_events_after(
+        &self,
+        _run_id: uuid::Uuid,
+        _after_id: i64,
+        _limit: i64,
+    ) -> Result<Vec<arazzo_store::RunEvent>, arazzo_store::StoreError> {
         unimplemented!()
     }
 
-    async fn check_run_status(&self, _run_id: uuid::Uuid) -> Result<String, arazzo_store::StoreError> {
+    async fn check_run_status(
+        &self,
+        _run_id: uuid::Uuid,
+    ) -> Result<String, arazzo_store::StoreError> {
         unimplemented!()
     }
 }
@@ -192,7 +208,7 @@ fn evaluate_success_defaults_to_2xx() {
         extensions: BTreeMap::new(),
     };
 
-    let mut headers = BTreeMap::new();
+    let headers = BTreeMap::new();
     let resp_ctx = ResponseContext {
         status: 200,
         headers: &headers,
@@ -232,7 +248,7 @@ async fn compute_outputs_extracts_from_response() {
         extensions: BTreeMap::new(),
     };
 
-    let mut headers = BTreeMap::new();
+    let headers = BTreeMap::new();
     let resp_ctx = ResponseContext {
         status: 200,
         headers: &headers,
@@ -291,4 +307,3 @@ fn response_to_json_serializes() {
     assert_eq!(json["body"], "{\"success\":true}");
     assert_eq!(json["body_truncated"], false);
 }
-

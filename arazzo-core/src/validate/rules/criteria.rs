@@ -1,6 +1,4 @@
-use crate::types::{
-    Criterion, CriterionExpressionLanguage, CriterionType, KnownCriterionType,
-};
+use crate::types::{Criterion, CriterionExpressionLanguage, CriterionType, KnownCriterionType};
 use crate::validate::rules::common::validate_runtime_expr;
 use crate::validate::validator::Validator;
 
@@ -19,7 +17,12 @@ pub(crate) fn validate_criteria_list(v: &mut Validator, path: &str, criteria: &[
             Some(_) => true,
         };
 
-        if requires_context && c.context.as_ref().map(|s| s.trim().is_empty()).unwrap_or(true) {
+        if requires_context
+            && c.context
+                .as_ref()
+                .map(|s| s.trim().is_empty())
+                .unwrap_or(true)
+        {
             v.push(
                 format!("{ipath}.context"),
                 "must be provided when type is regex/jsonpath/xpath/custom",
@@ -54,4 +57,3 @@ pub(crate) fn validate_criteria_list(v: &mut Validator, path: &str, criteria: &[
         }
     }
 }
-

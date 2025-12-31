@@ -1,6 +1,6 @@
+use chrono::{DateTime, Utc};
 use std::sync::Arc;
 use uuid::Uuid;
-use chrono::{DateTime, Utc};
 
 use arazzo_exec::executor::events::{CompositeEventSink, Event, EventSink, StoreEventSink};
 use arazzo_store::{RunStatus, StateStore};
@@ -59,7 +59,6 @@ impl StateStore for MockStore {
         unimplemented!()
     }
 
-
     async fn mark_step_succeeded(
         &self,
         _run_id: uuid::Uuid,
@@ -97,10 +96,7 @@ impl StateStore for MockStore {
         unimplemented!()
     }
 
-    async fn mark_run_started(
-        &self,
-        _run_id: uuid::Uuid,
-    ) -> Result<(), arazzo_store::StoreError> {
+    async fn mark_run_started(&self, _run_id: uuid::Uuid) -> Result<(), arazzo_store::StoreError> {
         unimplemented!()
     }
 
@@ -124,11 +120,17 @@ impl StateStore for MockStore {
         unimplemented!()
     }
 
-    async fn get_run(&self, _run_id: uuid::Uuid) -> Result<Option<arazzo_store::WorkflowRun>, arazzo_store::StoreError> {
+    async fn get_run(
+        &self,
+        _run_id: uuid::Uuid,
+    ) -> Result<Option<arazzo_store::WorkflowRun>, arazzo_store::StoreError> {
         unimplemented!()
     }
 
-    async fn get_run_steps(&self, _run_id: uuid::Uuid) -> Result<Vec<arazzo_store::RunStep>, arazzo_store::StoreError> {
+    async fn get_run_steps(
+        &self,
+        _run_id: uuid::Uuid,
+    ) -> Result<Vec<arazzo_store::RunStep>, arazzo_store::StoreError> {
         unimplemented!()
     }
 
@@ -139,18 +141,28 @@ impl StateStore for MockStore {
         unimplemented!()
     }
 
-    async fn get_step_attempts(&self, _run_step_id: uuid::Uuid) -> Result<Vec<arazzo_store::StepAttempt>, arazzo_store::StoreError> {
+    async fn get_step_attempts(
+        &self,
+        _run_step_id: uuid::Uuid,
+    ) -> Result<Vec<arazzo_store::StepAttempt>, arazzo_store::StoreError> {
         unimplemented!()
     }
 
-    async fn get_events_after(&self, _run_id: uuid::Uuid, _after_id: i64, _limit: i64) -> Result<Vec<arazzo_store::RunEvent>, arazzo_store::StoreError> {
+    async fn get_events_after(
+        &self,
+        _run_id: uuid::Uuid,
+        _after_id: i64,
+        _limit: i64,
+    ) -> Result<Vec<arazzo_store::RunEvent>, arazzo_store::StoreError> {
         unimplemented!()
     }
 
-    async fn check_run_status(&self, _run_id: uuid::Uuid) -> Result<String, arazzo_store::StoreError> {
+    async fn check_run_status(
+        &self,
+        _run_id: uuid::Uuid,
+    ) -> Result<String, arazzo_store::StoreError> {
         unimplemented!()
     }
-
 }
 
 #[tokio::test]
@@ -247,4 +259,3 @@ async fn composite_event_sink_forwards_to_all_sinks() {
     assert_eq!(events1.len(), 1);
     assert_eq!(events2.len(), 1);
 }
-

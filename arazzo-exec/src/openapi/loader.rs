@@ -15,8 +15,7 @@ pub(crate) async fn load_openapi(
         let body = resp.text().await.map_err(|e| e.to_string())?;
         parse_openapi_str(&body)
     } else {
-        let body =
-            std::fs::read_to_string(url_or_path).map_err(|e| format!("read file: {e}"))?;
+        let body = std::fs::read_to_string(url_or_path).map_err(|e| format!("read file: {e}"))?;
         parse_openapi_str(&body)
     }
 }
@@ -30,4 +29,3 @@ pub(crate) fn parse_openapi_str(body: &str) -> Result<serde_json::Value, String>
         serde_json::to_value(y).map_err(|e| e.to_string())
     }
 }
-

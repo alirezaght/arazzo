@@ -76,7 +76,11 @@ impl PolicyGate {
         self
     }
 
-    pub fn effective_for_source(&self, source: &str, overrides: &PolicyOverrides) -> EffectivePolicy {
+    pub fn effective_for_source(
+        &self,
+        source: &str,
+        overrides: &PolicyOverrides,
+    ) -> EffectivePolicy {
         self.cfg.effective_for_source(source, overrides)
     }
 
@@ -99,7 +103,11 @@ impl PolicyGate {
         Ok(RequestGateResult {
             url: req.url.to_string(),
             method: req.method.clone(),
-            headers: sanitize_headers(&req.headers, &eff.sensitive_headers, secret_derived_header_names),
+            headers: sanitize_headers(
+                &req.headers,
+                &eff.sensitive_headers,
+                secret_derived_header_names,
+            ),
             body,
         })
     }
@@ -115,7 +123,11 @@ impl PolicyGate {
 
         Ok(ResponseGateResult {
             status: resp.status,
-            headers: sanitize_headers(&resp.headers, &eff.sensitive_headers, secret_derived_header_names),
+            headers: sanitize_headers(
+                &resp.headers,
+                &eff.sensitive_headers,
+                secret_derived_header_names,
+            ),
             body: truncate_body(&resp.body, eff.limits.response.max_body_bytes),
         })
     }
@@ -150,7 +162,10 @@ fn enforce_request(eff: &EffectivePolicy, req: &HttpRequestParts) -> Result<(), 
     Ok(())
 }
 
-fn enforce_response(eff: &EffectivePolicy, resp: &HttpResponseParts) -> Result<(), PolicyGateError> {
+fn enforce_response(
+    eff: &EffectivePolicy,
+    resp: &HttpResponseParts,
+) -> Result<(), PolicyGateError> {
     enforce_headers(
         &resp.headers,
         eff.limits.response.max_headers_count,
@@ -177,13 +192,12 @@ fn enforce_headers(
             max: max_count,
         });
     }
-    let bytes: usize = headers
-        .iter()
-        .map(|(k, v)| k.len() + v.len())
-        .sum();
+    let bytes: usize = headers.iter().map(|(k, v)| k.len() + v.len()).sum();
     if bytes > max_bytes {
-        return Err(PolicyGateError::HeaderBytes { bytes, max: max_bytes });
+        return Err(PolicyGateError::HeaderBytes {
+            bytes,
+            max: max_bytes,
+        });
     }
     Ok(())
 }
-

@@ -3,15 +3,19 @@ use std::collections::BTreeSet;
 use std::path::Path;
 use std::time::Duration;
 
-use crate::{ConcurrencyArgs, OutputArgs, PolicyArgs, RetryArgs};
 use crate::output::print_error;
+use crate::{ConcurrencyArgs, OutputArgs, PolicyArgs, RetryArgs};
 
 pub fn load_inputs(path: Option<&Path>, output: &OutputArgs) -> Option<serde_json::Value> {
     let path = path?;
     let content = match std::fs::read_to_string(path) {
         Ok(c) => c,
         Err(e) => {
-            print_error(output.format, output.quiet, &format!("failed to read inputs: {e}"));
+            print_error(
+                output.format,
+                output.quiet,
+                &format!("failed to read inputs: {e}"),
+            );
             return None;
         }
     };
@@ -21,7 +25,11 @@ pub fn load_inputs(path: Option<&Path>, output: &OutputArgs) -> Option<serde_jso
     if let Ok(v) = serde_yaml::from_str(&content) {
         return Some(v);
     }
-    print_error(output.format, output.quiet, "inputs file is neither valid JSON nor YAML");
+    print_error(
+        output.format,
+        output.quiet,
+        "inputs file is neither valid JSON nor YAML",
+    );
     None
 }
 
@@ -121,9 +129,7 @@ pub fn get_database_url(store_arg: Option<String>, output: &OutputArgs) -> Optio
         .or_else(|| std::env::var("ARAZZO_DATABASE_URL").ok())
         .or_else(|| std::env::var("DATABASE_URL").ok());
     if url.is_none() {
-        print_error(output.format, output.quiet, 
-            "missing database URL. Set --store <url>, ARAZZO_DATABASE_URL, or DATABASE_URL environment variable");
+        print_error(output.format, output.quiet, "missing database URL. Set --store <url>, ARAZZO_DATABASE_URL, or DATABASE_URL environment variable");
     }
     url
 }
-

@@ -3,7 +3,7 @@ use serde_json::Value as JsonValue;
 use uuid::Uuid;
 
 use crate::executor::criteria;
-use crate::executor::eval::{EvalContext, ResponseContext, eval_value};
+use crate::executor::eval::{eval_value, EvalContext, ResponseContext};
 use crate::policy::{HttpResponseParts, ResponseGateResult};
 
 pub fn parse_body_json(resp: &HttpResponseParts) -> Option<JsonValue> {
@@ -61,4 +61,3 @@ pub fn response_to_json(r: &ResponseGateResult) -> JsonValue {
         "body_truncated": r.body.truncated,
     })
 }
-

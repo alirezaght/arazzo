@@ -1,8 +1,8 @@
 use serde::Serialize;
 
 use crate::exit_codes;
-use crate::output::{OutputFormat, print_result};
-use crate::{OutputArgs, StoreArgs, OpenApiArgs, SecretsArgs, PolicyArgs};
+use crate::output::{print_result, OutputFormat};
+use crate::{OpenApiArgs, OutputArgs, PolicyArgs, SecretsArgs, StoreArgs};
 
 #[derive(Serialize)]
 struct Check {
@@ -69,7 +69,9 @@ pub async fn doctor_cmd(
 }
 
 async fn check_database(store: &StoreArgs) -> Check {
-    let url = store.store.clone()
+    let url = store
+        .store
+        .clone()
         .or_else(|| std::env::var("ARAZZO_DATABASE_URL").ok())
         .or_else(|| std::env::var("DATABASE_URL").ok());
 
@@ -79,20 +81,18 @@ async fn check_database(store: &StoreArgs) -> Check {
             status: "warning".to_string(),
             message: Some("no database URL configured".to_string()),
         },
-        Some(url) => {
-            match arazzo_store::PostgresStore::connect(&url, 1).await {
-                Ok(_) => Check {
-                    name: "database".to_string(),
-                    status: "ok".to_string(),
-                    message: Some("connected".to_string()),
-                },
-                Err(e) => Check {
-                    name: "database".to_string(),
-                    status: "error".to_string(),
-                    message: Some(format!("connection failed: {e}")),
-                },
-            }
-        }
+        Some(url) => match arazzo_store::PostgresStore::connect(&url, 1).await {
+            Ok(_) => Check {
+                name: "database".to_string(),
+                status: "ok".to_string(),
+                message: Some("connected".to_string()),
+            },
+            Err(e) => Check {
+                name: "database".to_string(),
+                status: "error".to_string(),
+                message: Some(format!("connection failed: {e}")),
+            },
+        },
     }
 }
 
@@ -143,4 +143,3 @@ fn check_policy(policy: &PolicyArgs) -> Check {
         }
     }
 }
-

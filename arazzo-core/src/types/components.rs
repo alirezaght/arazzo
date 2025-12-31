@@ -21,4 +21,3 @@ pub struct Components {
     #[serde(flatten, default)]
     pub extensions: Extensions,
 }
-

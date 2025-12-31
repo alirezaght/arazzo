@@ -38,11 +38,7 @@ async fn webhook_sink_sends_on_run_finished() {
         requests: requests.clone(),
     });
     let base = Arc::new(NoOpEventSink);
-    let sink = WebhookEventSink::new(
-        "https://example.com/webhook".to_string(),
-        http,
-        base,
-    );
+    let sink = WebhookEventSink::new("https://example.com/webhook".to_string(), http, base);
 
     sink.emit(Event::RunFinished {
         run_id: Uuid::new_v4(),
@@ -64,11 +60,7 @@ async fn webhook_sink_ignores_non_finished_events() {
         requests: requests.clone(),
     });
     let base = Arc::new(NoOpEventSink);
-    let sink = WebhookEventSink::new(
-        "https://example.com/webhook".to_string(),
-        http,
-        base,
-    );
+    let sink = WebhookEventSink::new("https://example.com/webhook".to_string(), http, base);
 
     sink.emit(Event::RunStarted {
         run_id: Uuid::new_v4(),
@@ -86,4 +78,3 @@ async fn webhook_sink_ignores_non_finished_events() {
     let reqs = requests.lock().await;
     assert_eq!(reqs.len(), 0);
 }
-

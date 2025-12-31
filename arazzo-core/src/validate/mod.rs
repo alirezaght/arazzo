@@ -20,4 +20,3 @@ pub fn validate_document(doc: &ArazzoDocument) -> Result<(), ValidationError> {
     v.validate_document(doc);
     v.finish()
 }
-

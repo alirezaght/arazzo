@@ -80,4 +80,3 @@ pub enum FailureActionOrReusable {
     Action(FailureAction),
     Reusable(ReusableObject),
 }
-

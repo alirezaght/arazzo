@@ -12,4 +12,3 @@ pub fn redact_url_password(url: &str) -> String {
     }
     url.to_string()
 }
-

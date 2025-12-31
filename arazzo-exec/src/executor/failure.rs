@@ -6,7 +6,7 @@ use serde_json::json;
 use crate::executor::http::HttpError;
 use crate::executor::worker::StepResult;
 use crate::policy::HttpResponseParts;
-use crate::retry::{RetryConfig, RetryDecision, decide_retry};
+use crate::retry::{decide_retry, RetryConfig, RetryDecision};
 
 pub fn decide_failure(
     retry_cfg: &RetryConfig,
@@ -90,4 +90,3 @@ pub fn decide_network_failure(
         end_run: true,
     }
 }
-

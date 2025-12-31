@@ -25,19 +25,26 @@ pub(crate) fn format_failure_actions(actions: &[FailureActionOrReusable]) -> Vec
                     format!("{}: goto ({target})", a.name)
                 }
                 FailureActionType::Retry => {
-                    let after = a.retry_after_seconds.map(|s| s.to_string()).unwrap_or_else(|| "default".into());
-                    let limit = a.retry_limit.map(|n| n.to_string()).unwrap_or_else(|| "1".into());
+                    let after = a
+                        .retry_after_seconds
+                        .map(|s| s.to_string())
+                        .unwrap_or_else(|| "default".into());
+                    let limit = a
+                        .retry_limit
+                        .map(|n| n.to_string())
+                        .unwrap_or_else(|| "1".into());
                     let target = a
                         .step_id
                         .as_ref()
                         .map(|s| format!("stepId={s}"))
                         .or_else(|| a.workflow_id.as_ref().map(|w| format!("workflowId={w}")))
                         .unwrap_or_else(|| "current".to_string());
-                    format!("{}: retry (after={after}s limit={limit} target={target})", a.name)
+                    format!(
+                        "{}: retry (after={after}s limit={limit} target={target})",
+                        a.name
+                    )
                 }
             },
         })
         .collect()
 }
-
-

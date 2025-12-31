@@ -1,8 +1,8 @@
-use std::collections::BTreeMap;
-use std::path::PathBuf;
 use tempfile::TempDir;
 
-use arazzo_exec::secrets::{CompositeProvider, EnvSecretsProvider, FileSecretsProvider, SecretsProvider};
+use arazzo_exec::secrets::{
+    CompositeProvider, EnvSecretsProvider, FileSecretsProvider, SecretsProvider,
+};
 use arazzo_exec::secrets::{SecretError, SecretRef};
 
 #[tokio::test]
@@ -20,7 +20,10 @@ async fn env_secrets_provider_reads_from_env() {
     };
 
     let result = provider.get(&secret_ref).await.unwrap();
-    assert_eq!(std::str::from_utf8(result.expose_bytes()).unwrap(), "secret-value");
+    assert_eq!(
+        std::str::from_utf8(result.expose_bytes()).unwrap(),
+        "secret-value"
+    );
 
     std::env::remove_var("TEST_SECRET");
 }
@@ -40,7 +43,10 @@ async fn env_secrets_provider_with_prefix() {
     };
 
     let result = provider.get(&secret_ref).await.unwrap();
-    assert_eq!(std::str::from_utf8(result.expose_bytes()).unwrap(), "prefixed-value");
+    assert_eq!(
+        std::str::from_utf8(result.expose_bytes()).unwrap(),
+        "prefixed-value"
+    );
 
     std::env::remove_var("PREFIX_TEST_SECRET");
 }
@@ -97,7 +103,10 @@ async fn file_secrets_provider_reads_from_file() {
     };
 
     let result = provider.get(&secret_ref).await.unwrap();
-    assert_eq!(std::str::from_utf8(result.expose_bytes()).unwrap(), "file-secret-value");
+    assert_eq!(
+        std::str::from_utf8(result.expose_bytes()).unwrap(),
+        "file-secret-value"
+    );
 }
 
 #[tokio::test]
@@ -143,7 +152,10 @@ async fn composite_provider_tries_providers_in_order() {
         query: None,
     };
     let result1 = composite.get(&secret_ref1).await.unwrap();
-    assert_eq!(std::str::from_utf8(result1.expose_bytes()).unwrap(), "env-value");
+    assert_eq!(
+        std::str::from_utf8(result1.expose_bytes()).unwrap(),
+        "env-value"
+    );
 
     let secret_ref2 = SecretRef {
         scheme: "file-secrets".to_string(),
@@ -151,7 +163,10 @@ async fn composite_provider_tries_providers_in_order() {
         query: None,
     };
     let result2 = composite.get(&secret_ref2).await.unwrap();
-    assert_eq!(std::str::from_utf8(result2.expose_bytes()).unwrap(), "file-value");
+    assert_eq!(
+        std::str::from_utf8(result2.expose_bytes()).unwrap(),
+        "file-value"
+    );
 
     std::env::remove_var("ENV_SECRET");
 }
@@ -195,10 +210,15 @@ async fn secrets_provider_get_many() {
 
     let result = provider.get_many(&refs).await.unwrap();
     assert_eq!(result.len(), 2);
-    assert_eq!(std::str::from_utf8(result[&refs[0]].expose_bytes()).unwrap(), "value1");
-    assert_eq!(std::str::from_utf8(result[&refs[1]].expose_bytes()).unwrap(), "value2");
+    assert_eq!(
+        std::str::from_utf8(result[&refs[0]].expose_bytes()).unwrap(),
+        "value1"
+    );
+    assert_eq!(
+        std::str::from_utf8(result[&refs[1]].expose_bytes()).unwrap(),
+        "value2"
+    );
 
     std::env::remove_var("SECRET1");
     std::env::remove_var("SECRET2");
 }
-

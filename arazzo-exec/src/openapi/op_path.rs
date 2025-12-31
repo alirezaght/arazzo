@@ -34,4 +34,3 @@ fn extract_source_name_from_template(s: &str) -> Option<String> {
     }
     Some(name.to_string())
 }
-
