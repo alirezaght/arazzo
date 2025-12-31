@@ -19,11 +19,11 @@ COPY arazzo-store/src ./arazzo-store/src
 COPY arazzo-store/postgres ./arazzo-store/postgres
 COPY arazzo-cli/src ./arazzo-cli/src
 
-RUN cargo build --release --bin arazzo-cli && \
-    strip /build/target/release/arazzo-cli
+RUN cargo build --release --bin arazzo && \
+    strip /build/target/release/arazzo
 
 FROM gcr.io/distroless/cc-debian12:nonroot
 
-COPY --from=builder --chown=nonroot:nonroot /build/target/release/arazzo-cli /usr/local/bin/arazzo
+COPY --from=builder --chown=nonroot:nonroot /build/target/release/arazzo /usr/local/bin/arazzo
 
 ENTRYPOINT ["/usr/local/bin/arazzo"]
