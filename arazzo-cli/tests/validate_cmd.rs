@@ -25,7 +25,7 @@ workflows:
 "#;
     let f = write_temp(doc);
 
-    Command::cargo_bin("arazzo-cli")
+    Command::cargo_bin("arazzo")
         .unwrap()
         .args(["validate", f.path().to_string_lossy().as_ref()])
         .assert()
@@ -50,7 +50,7 @@ workflows:
 "#;
     let f = write_temp(doc);
 
-    Command::cargo_bin("arazzo-cli")
+    Command::cargo_bin("arazzo")
         .unwrap()
         .args(["validate", f.path().to_string_lossy().as_ref()])
         .assert()
@@ -75,7 +75,7 @@ workflows:
 "#;
     let f = write_temp(doc);
 
-    Command::cargo_bin("arazzo-cli")
+    Command::cargo_bin("arazzo")
         .unwrap()
         .args([
             "plan",
@@ -144,7 +144,7 @@ workflows:
     );
     let arazzo_file = write_temp(&arazzo);
 
-    Command::cargo_bin("arazzo-cli")
+    Command::cargo_bin("arazzo")
         .unwrap()
         .args([
             "plan",
