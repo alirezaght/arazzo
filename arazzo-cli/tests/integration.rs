@@ -4,7 +4,7 @@ use tempfile::TempDir;
 
 #[test]
 fn test_validate_command() {
-    let mut cmd = Command::cargo_bin("arazzo-cli").unwrap();
+    let mut cmd = Command::cargo_bin("arazzo").unwrap();
 
     // Create a minimal valid workflow
     let workflow = r#"
@@ -34,7 +34,7 @@ workflows:
 
 #[test]
 fn test_validate_invalid_workflow() {
-    let mut cmd = Command::cargo_bin("arazzo-cli").unwrap();
+    let mut cmd = Command::cargo_bin("arazzo").unwrap();
 
     let tmp_dir = TempDir::new().unwrap();
     let workflow_path = tmp_dir.path().join("invalid.yaml");
@@ -48,7 +48,7 @@ fn test_validate_invalid_workflow() {
 
 #[test]
 fn test_plan_command() {
-    let mut cmd = Command::cargo_bin("arazzo-cli").unwrap();
+    let mut cmd = Command::cargo_bin("arazzo").unwrap();
 
     let workflow = r#"
 arazzo: 1.0.1
@@ -77,7 +77,7 @@ workflows:
 
 #[test]
 fn test_plan_dot_format() {
-    let mut cmd = Command::cargo_bin("arazzo-cli").unwrap();
+    let mut cmd = Command::cargo_bin("arazzo").unwrap();
 
     // Use a simple workflow that doesn't require OpenAPI resolution
     let workflow = r#"
