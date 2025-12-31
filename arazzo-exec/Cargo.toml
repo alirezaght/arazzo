@@ -1,0 +1,50 @@
+[package]
+name = "arazzo-exec"
+description = "Runtime engine for executing Arazzo workflows"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+rust-version.workspace = true
+keywords = ["arazzo", "workflow", "executor", "api"]
+categories = ["web-programming"]
+
+[features]
+default = []
+aws-secrets = ["aws-sdk-secretsmanager", "aws-config"]
+gcp-secrets = ["google-cloud-secretmanager-v1"]
+
+[dependencies]
+arazzo-core = { path = "../arazzo-core", version = "0.1.0" }
+arazzo-store = { path = "../arazzo-store", version = "0.1.0" }
+tokio = { workspace = true }
+reqwest = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+serde_yaml = { workspace = true }
+thiserror = { workspace = true }
+secrecy = { workspace = true }
+zeroize = { workspace = true }
+async-trait = { workspace = true }
+httpdate = { workspace = true }
+fastrand = { workspace = true }
+url = { workspace = true }
+futures-util = { workspace = true }
+urlencoding = { workspace = true }
+uuid = { workspace = true }
+serde_json_path = "0.7"
+regex = { workspace = true }
+
+# Optional AWS deps
+aws-sdk-secretsmanager = { version = "1", optional = true }
+aws-config = { version = "1", optional = true }
+
+# Optional GCP deps
+google-cloud-secretmanager-v1 = { version = "1.2", optional = true }
+
+[dev-dependencies]
+tempfile = "3.20.0"
+chrono = { workspace = true }
+tokio = { workspace = true, features = ["rt-multi-thread", "macros", "test-util"] }
+uuid = { workspace = true, features = ["v4"] }

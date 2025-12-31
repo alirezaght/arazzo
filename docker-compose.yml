@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: ${ARAZZO_POSTGRES_DB}
+      POSTGRES_USER: ${ARAZZO_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${ARAZZO_POSTGRES_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - arazzo_pg:/var/lib/postgresql/data
+
+volumes:
+  arazzo_pg:
+

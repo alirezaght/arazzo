@@ -1,0 +1,99 @@
+arazzo: 1.0.1
+info:
+  title: Arazzo Cancel/Resume Test (httpbin)
+  version: 0.1.0
+  summary: Long-running workflow with delays to test cancel and resume functionality
+
+sourceDescriptions:
+  - name: httpbin
+    type: openapi
+    url: https://raw.githubusercontent.com/conorbranagan/mcp-openapi/refs/heads/main/test-specs/httpbin.yaml
+
+workflows:
+  - workflowId: longRunningWithDelays
+    summary: Multi-step workflow with delays for testing cancel/resume
+    inputs:
+      type: object
+      properties:
+        delaySeconds:
+          type: integer
+          default: 5
+          description: Delay for each step (use longer delays to test cancel/resume)
+      required: []
+
+    steps:
+      - stepId: step1
+        description: First step with delay
+        operationId: getDelay
+        parameters:
+          - name: seconds
+            in: path
+            value: $inputs.delaySeconds
+        successCriteria:
+          - condition: $statusCode == 200
+        outputs:
+          url1: $response.body#/url
+
+      - stepId: step2
+        description: Second step with delay (depends on step1)
+        operationId: getDelay
+        parameters:
+          - name: seconds
+            in: path
+            value: $inputs.delaySeconds
+          - name: X-Step1-Url
+            in: header
+            value: $steps.step1.outputs.url1
+        successCriteria:
+          - condition: $statusCode == 200
+        outputs:
+          url2: $response.body#/url
+
+      - stepId: step3
+        description: Third step with delay (depends on step2)
+        operationId: getDelay
+        parameters:
+          - name: seconds
+            in: path
+            value: $inputs.delaySeconds
+          - name: X-Step2-Url
+            in: header
+            value: $steps.step2.outputs.url2
+        successCriteria:
+          - condition: $statusCode == 200
+        outputs:
+          url3: $response.body#/url
+
+      - stepId: step4
+        description: Fourth step with delay (depends on step3)
+        operationId: getDelay
+        parameters:
+          - name: seconds
+            in: path
+            value: $inputs.delaySeconds
+          - name: X-Step3-Url
+            in: header
+            value: $steps.step3.outputs.url3
+        successCriteria:
+          - condition: $statusCode == 200
+        outputs:
+          url4: $response.body#/url
+
+      - stepId: finalStep
+        description: Final step that collects all URLs
+        operationId: postRequest
+        requestBody:
+          contentType: application/json
+          payload:
+            step1: $steps.step1.outputs.url1
+            step2: $steps.step2.outputs.url2
+            step3: $steps.step3.outputs.url3
+            step4: $steps.step4.outputs.url4
+        successCriteria:
+          - condition: $statusCode == 200
+        outputs:
+          final: $response.body#/json
+
+    outputs:
+      final: $steps.finalStep.outputs.final
+

@@ -1,0 +1,7 @@
+{
+  "user": "testuser",
+  "password": "testpass",
+  "authorizationHeader": "Basic dGVzdHVzZXI6dGVzdHBhc3M=",
+  "delaySeconds": 3
+}
+

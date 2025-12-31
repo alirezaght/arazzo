@@ -1,0 +1,24 @@
+[workspace]
+changelog_update = true
+git_release_enable = true
+git_tag_enable = true
+pr_labels = ["release"]
+publish_allow_dirty = true
+semver_check = true
+
+[[package]]
+name = "arazzo-core"
+publish = true
+
+[[package]]
+name = "arazzo-store"
+publish = true
+
+[[package]]
+name = "arazzo-exec"
+publish = true
+
+[[package]]
+name = "arazzo-cli"
+publish = true
+

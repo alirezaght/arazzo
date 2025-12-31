@@ -1,0 +1,140 @@
+arazzo: 1.0.1
+info:
+  title: Arazzo Parallel Fan-out/Fan-in Test (httpbin)
+  version: 0.1.0
+
+sourceDescriptions:
+  - name: httpbin
+    type: openapi
+    url: https://raw.githubusercontent.com/conorbranagan/mcp-openapi/refs/heads/main/test-specs/httpbin.yaml
+
+workflows:
+  - workflowId: parallelAfterLogin
+    summary: Login, then run 5 slow calls in parallel, then join
+    inputs:
+      type: object
+      properties:
+        user:
+          type: string
+        password:
+          type: string
+        authorizationHeader:
+          type: string
+          description: "Full header value, e.g. 'Basic dXNlcjpwYXNzd2Q='"
+      required: [user, password, authorizationHeader]
+
+    steps:
+      - stepId: login
+        description: Basic-auth login (prereq for all parallel steps)
+        operationId: basicAuth
+        parameters:
+          - name: user
+            in: path
+            value: $inputs.user
+          - name: password
+            in: path
+            value: $inputs.password
+          - name: Authorization
+            in: header
+            value: $inputs.authorizationHeader
+        successCriteria:
+          - condition: $statusCode == 200
+        outputs:
+          authedUser: $response.body#/user
+
+      - stepId: slow1
+        description: 1 second delay
+        operationId: getDelay
+        parameters:
+          - name: seconds
+            in: path
+            value: 1
+          - name: X-Authed-User
+            in: header
+            value: $steps.login.outputs.authedUser
+        successCriteria:
+          - condition: $statusCode == 200
+        outputs:
+          url1: $response.body#/url
+
+      - stepId: slow2
+        description: 2 second delay
+        operationId: getDelay
+        parameters:
+          - name: seconds
+            in: path
+            value: 2
+          - name: X-Authed-User
+            in: header
+            value: $steps.login.outputs.authedUser
+        successCriteria:
+          - condition: $statusCode == 200
+        outputs:
+          url2: $response.body#/url
+
+      - stepId: slow3
+        description: 3 second delay
+        operationId: getDelay
+        parameters:
+          - name: seconds
+            in: path
+            value: 3
+          - name: X-Authed-User
+            in: header
+            value: $steps.login.outputs.authedUser
+        successCriteria:
+          - condition: $statusCode == 200
+        outputs:
+          url3: $response.body#/url
+
+      - stepId: slow4
+        description: 4 second delay
+        operationId: getDelay
+        parameters:
+          - name: seconds
+            in: path
+            value: 4
+          - name: X-Authed-User
+            in: header
+            value: $steps.login.outputs.authedUser
+        successCriteria:
+          - condition: $statusCode == 200
+        outputs:
+          url4: $response.body#/url
+
+      - stepId: slow5
+        description: 5 second delay (longest - determines total parallel time)
+        operationId: getDelay
+        parameters:
+          - name: seconds
+            in: path
+            value: 5
+          - name: X-Authed-User
+            in: header
+            value: $steps.login.outputs.authedUser
+        successCriteria:
+          - condition: $statusCode == 200
+        outputs:
+          url5: $response.body#/url
+
+      - stepId: joinAndPost
+        description: Fan-in step that requires outputs from all parallel steps
+        operationId: postRequest
+        requestBody:
+          contentType: application/json
+          payload:
+            kind: parallel-fanout-fanin
+            authedUser: $steps.login.outputs.authedUser
+            url1: $steps.slow1.outputs.url1
+            url2: $steps.slow2.outputs.url2
+            url3: $steps.slow3.outputs.url3
+            url4: $steps.slow4.outputs.url4
+            url5: $steps.slow5.outputs.url5
+        successCriteria:
+          - condition: $statusCode == 200
+        outputs:
+          echoedJson: $response.body#/json
+
+    outputs:
+      authedUser: $steps.login.outputs.authedUser
+      echoedJson: $steps.joinAndPost.outputs.echoedJson

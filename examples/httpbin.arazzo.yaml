@@ -1,0 +1,105 @@
+arazzo: 1.0.1
+info:
+  title: Httpbin test workflows
+  summary: Smoke test + retry test for an Arazzo executor
+  version: 1.0.1
+
+sourceDescriptions:
+  - name: httpbin
+    url: https://raw.githubusercontent.com/conorbranagan/mcp-openapi/refs/heads/main/test-specs/httpbin.yaml
+    type: openapi
+
+workflows:
+  - workflowId: httpbin_smoke
+    summary: Happy-path workflow that should succeed
+    description: |
+      Calls /ip, /headers (with custom header), /delay/{seconds}, then /post.
+      Uses outputs + runtime expressions to stitch data across steps.
+    inputs:
+      type: object
+      properties:
+        testHeaderValue:
+          type: string
+          default: "hello-from-arazzo"
+        delaySeconds:
+          type: integer
+          default: 1
+        message:
+          type: string
+          default: "it lives"
+    steps:
+      - stepId: getIp
+        description: Get origin IP from httpbin
+        operationId: getIp
+        successCriteria:
+          - condition: $statusCode == 200
+        outputs:
+          origin: $response.body#/origin
+
+      - stepId: getHeaders
+        description: Send a custom header and read it back
+        operationId: getHeaders
+        parameters:
+          - name: X-Arazzo-Test
+            in: header
+            value: $inputs.testHeaderValue
+        successCriteria:
+          - condition: $statusCode == 200
+        outputs:
+          echoedHeader: $response.body#/headers/X-Arazzo-Test
+
+      - stepId: delay
+        description: Force a slow request (timeouts / cancellation / tracing)
+        operationId: getDelay
+        parameters:
+          - name: seconds
+            in: path
+            value: $inputs.delaySeconds
+        successCriteria:
+          - condition: $statusCode == 200
+        outputs:
+          delayedUrl: $response.body#/url
+
+      - stepId: postEcho
+        description: Post JSON built from previous step outputs
+        operationId: postRequest
+        requestBody:
+          contentType: application/json
+          payload:
+            message: $inputs.message
+            origin: $steps.getIp.outputs.origin
+            echoedHeader: $steps.getHeaders.outputs.echoedHeader
+            delayedUrl: $steps.delay.outputs.delayedUrl
+        successCriteria:
+          - condition: $statusCode == 200
+        outputs:
+          echoedJson: $response.body#/json
+
+    outputs:
+      origin: $steps.getIp.outputs.origin
+      echoedHeader: $steps.getHeaders.outputs.echoedHeader
+      echoedJson: $steps.postEcho.outputs.echoedJson
+
+  - workflowId: httpbin_retry_429
+    summary: Retry test that intentionally ends in failure
+    description: |
+      Calls /status/429 and retries a few times. This should FAIL after retryLimit,
+      so you can verify: retry timing, attempt counts, event logs, final status.
+    steps:
+      - stepId: force429
+        description: Always returns 429 (rate limited)
+        operationId: statusCode
+        parameters:
+          - name: code
+            in: path
+            value: 429
+        successCriteria:
+          - condition: $statusCode == 200
+        onFailure:
+          - name: retryOn429
+            type: retry
+            retryAfter: 1
+            retryLimit: 3
+            criteria:
+              - condition: $statusCode == 429
+

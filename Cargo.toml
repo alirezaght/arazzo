@@ -1,0 +1,37 @@
+[workspace]
+resolver = "2"
+members = [
+  "arazzo-cli",
+  "arazzo-core",
+  "arazzo-exec",
+  "arazzo-store",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+repository = "https://github.com/alirezaghias/arazzo"
+authors = ["Alireza Ghias"]
+rust-version = "1.80"
+
+[workspace.dependencies]
+thiserror = "2.0.11"
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"
+serde_yaml = "0.9.34"
+regex = "1.11.1"
+clap = { version = "4.5.26", features = ["derive"] }
+tokio = { version = "1.43.0", features = ["rt-multi-thread", "macros"] }
+reqwest = { version = "0.12.12", default-features = false, features = ["rustls-tls", "json"] }
+sqlx = { version = "0.8.3", default-features = false, features = ["runtime-tokio-rustls", "postgres", "macros", "migrate", "json", "uuid", "chrono"] }
+secrecy = "0.10.3"
+zeroize = "1.8.1"
+async-trait = "0.1.87"
+httpdate = "1.0.3"
+fastrand = "2.3.0"
+url = "2.5.7"
+uuid = "1.11.0"
+chrono = "0.4.39"
+futures-util = "0.3.30"
+urlencoding = "2.1.3"

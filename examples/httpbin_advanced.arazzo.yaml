@@ -1,0 +1,194 @@
+arazzo: 1.0.1
+info:
+  title: Arazzo Advanced Executor Test (httpbin)
+  version: 0.1.0
+  summary: JSONPath + regex + branching + replacements + embedded runtime expressions
+
+sourceDescriptions:
+  - name: httpbin
+    type: openapi
+    url: https://raw.githubusercontent.com/conorbranagan/mcp-openapi/refs/heads/main/test-specs/httpbin.yaml
+
+components:
+  parameters:
+    authHeader:
+      name: Authorization
+      in: header
+      value: $inputs.authorizationHeader
+  failureActions:
+    retryOn429:
+      name: retryOn429
+      type: retry
+      retryAfter: 0.5
+      retryLimit: 3
+      criteria:
+        - condition: $statusCode == 429
+
+workflows:
+  - workflowId: complex_jsonpath_everywhere
+    summary: Complex workflow to stress criteria parsing + expression evaluation
+    inputs:
+      type: object
+      properties:
+        user:
+          type: string
+        password:
+          type: string
+        authorizationHeader:
+          type: string
+          description: "Full header value, e.g. 'Basic dXNlcjpwYXNzd29yZA=='"
+        mode:
+          type: string
+          enum: [fast, slow]
+          default: fast
+        delaySeconds:
+          type: integer
+          default: 2
+      required: [user, password, authorizationHeader]
+
+    steps:
+      - stepId: login
+        description: Basic-auth login, validate via JSONPath + regex + simple expressions
+        operationId: basicAuth
+        parameters:
+          - name: user
+            in: path
+            value: $inputs.user
+          - name: password
+            in: path
+            value: $inputs.password
+          - reference: $components.parameters.authHeader
+        successCriteria:
+          - condition: $statusCode == 200
+          - context: $response.body
+            condition: "$[?(@.authenticated == true)]"
+            type: jsonpath
+          - context: $response.header.Content-Type
+            condition: '^application/json'
+            type: regex
+        outputs:
+          authedUser: $response.body#/user
+
+      - stepId: getIp
+        description: Fetch IP and assert shape with JSONPath
+        operationId: getIp
+        successCriteria:
+          - condition: $statusCode == 200
+          - context: $response.body
+            condition: "$[?(@.origin)]"
+            type: jsonpath
+        outputs:
+          origin: $response.body#/origin
+
+      - stepId: getUserAgent
+        description: Fetch user-agent and validate via regex + JSONPath
+        operationId: getUserAgent
+        successCriteria:
+          - condition: $statusCode == 200
+          - context: $response.body
+            condition: "$[?(@['user-agent'])]"
+            type: jsonpath
+          - context: $response.body#/user-agent
+            condition: 'Mozilla|curl|reqwest|hyper|python|Go-http-client|arazzo'
+            type: regex
+        outputs:
+          ua: $response.body#/user-agent
+
+      - stepId: echoHeaders
+        description: Send dynamic headers, then assert they came back using JSONPath
+        operationId: getHeaders
+        parameters:
+          - reference: $components.parameters.authHeader
+          - name: X-Arazzo-User
+            in: header
+            value: $steps.login.outputs.authedUser
+          - name: X-Run-Mode
+            in: header
+            value: $inputs.mode
+          - name: X-Origin
+            in: header
+            value: $steps.getIp.outputs.origin
+        successCriteria:
+          - condition: $statusCode == 200
+        outputs:
+          echoedUser: $response.body#/headers/X-Arazzo-User
+          echoedMode: $response.body#/headers/X-Run-Mode
+
+      - stepId: echoQuery
+        description: /get with query params; validate using simple + regex
+        operationId: getRequest
+        parameters:
+          - name: user
+            in: query
+            value: $steps.login.outputs.authedUser
+          - name: ip
+            in: query
+            value: $steps.getIp.outputs.origin
+          - name: mode
+            in: query
+            value: $inputs.mode
+        successCriteria:
+          - condition: $statusCode == 200
+        outputs:
+          echoedUrl: $response.body#/url
+
+      - stepId: maybeDelay
+        description: Delay step before branching
+        operationId: getDelay
+        parameters:
+          - name: seconds
+            in: path
+            value: $inputs.delaySeconds
+        successCriteria:
+          - condition: $statusCode == 200
+        outputs:
+          delayedUrl: $response.body#/url
+
+      - stepId: postFinal
+        description: POST JSON with all collected data
+        operationId: postRequest
+        requestBody:
+          contentType: application/json
+          payload:
+            meta:
+              mode: $inputs.mode
+              note: "collected from {$steps.login.outputs.authedUser}"
+            auth:
+              user: $steps.login.outputs.authedUser
+            facts:
+              ip: $steps.getIp.outputs.origin
+              ua: $steps.getUserAgent.outputs.ua
+              echoedUser: $steps.echoHeaders.outputs.echoedUser
+              delayedUrl: $steps.maybeDelay.outputs.delayedUrl
+        successCriteria:
+          - condition: $statusCode == 200
+          - context: $response.body
+            condition: "$[?(@.json.auth.user)]"
+            type: jsonpath
+        outputs:
+          echoed: $response.body#/json
+
+    outputs:
+      user: $steps.login.outputs.authedUser
+      echoed: $steps.postFinal.outputs.echoed
+
+  - workflowId: rate_limit_retry_backoff
+    summary: Negative test for 429 retry
+    steps:
+      - stepId: always429
+        description: Always returns 429; should retry a few times then fail
+        operationId: statusCode
+        parameters:
+          - name: code
+            in: path
+            value: 429
+        successCriteria:
+          - condition: $statusCode == 200
+        onFailure:
+          - name: retryOn429
+            type: retry
+            retryAfter: 1
+            retryLimit: 3
+            criteria:
+              - condition: $statusCode == 429
+

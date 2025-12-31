@@ -1,0 +1,97 @@
+arazzo: 1.0.1
+info:
+  title: Arazzo Exec Complex Test (httpbin)
+  version: 0.1.0
+
+sourceDescriptions:
+  - name: httpbin
+    type: openapi
+    url: https://raw.githubusercontent.com/conorbranagan/mcp-openapi/refs/heads/main/test-specs/httpbin.yaml
+
+workflows:
+  - workflowId: loginAndDoStuff
+    summary: Basic-auth login, inspect headers, wait, then POST
+    inputs:
+      type: object
+      properties:
+        user:
+          type: string
+        password:
+          type: string
+        authorizationHeader:
+          type: string
+          description: "Full header value, e.g. 'Basic dXNlcjpwYXNzd2Q='"
+      required: [user, password, authorizationHeader]
+
+    # Global retry policy example (your executor applies it):
+    # retry on transient 429/503 responses anywhere unless overridden per-step.
+    failureActions:
+      - name: retryTransient
+        type: retry
+        retryAfter: 1
+        retryLimit: 5
+        criteria:
+          - condition: $statusCode == 429 || $statusCode == 503
+
+    steps:
+      - stepId: login
+        description: Verify basic auth works
+        operationId: basicAuth
+        parameters:
+          - name: user
+            in: path
+            value: $inputs.user
+          - name: password
+            in: path
+            value: $inputs.password
+          - name: Authorization
+            in: header
+            value: $inputs.authorizationHeader
+        successCriteria:
+          - condition: $statusCode == 200
+          - context: $response.body
+            condition: "$.authenticated == true"
+            type: jsonpath
+        outputs:
+          authedUser: $response.body#/user
+
+      - stepId: inspectHeaders
+        description: Call /headers and pass X-User header from login output
+        operationId: getHeaders
+        parameters:
+          - name: X-User
+            in: header
+            value: $steps.login.outputs.authedUser
+        successCriteria:
+          - condition: $statusCode == 200
+        outputs:
+          sentUser: $response.body#/headers/X-User
+
+      - stepId: waitASecond
+        description: '"Wait" by calling httpbin delay endpoint (acts like a timer)'
+        operationId: getDelay
+        parameters:
+          - name: seconds
+            in: path
+            value: 1
+        successCriteria:
+          - condition: $statusCode == 200
+
+      - stepId: finalPost
+        description: POST a JSON payload proving the data flowed through
+        operationId: postRequest
+        requestBody:
+          contentType: application/json
+          payload:
+            kind: complex
+            userFromLogin: $steps.login.outputs.authedUser
+            userHeaderEcho: $steps.inspectHeaders.outputs.sentUser
+        successCriteria:
+          - condition: $statusCode == 200
+        outputs:
+          echoedJson: $response.body#/json
+
+    outputs:
+      authedUser: $steps.login.outputs.authedUser
+      echoedJson: $steps.finalPost.outputs.echoedJson
+

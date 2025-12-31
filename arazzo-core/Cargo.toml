@@ -1,0 +1,18 @@
+[package]
+name = "arazzo-core"
+description = "Arazzo 1.0.x parser, validator, and planner"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+rust-version.workspace = true
+keywords = ["arazzo", "openapi", "workflow", "api"]
+categories = ["parser-implementations", "web-programming"]
+
+[dependencies]
+thiserror = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+serde_yaml = { workspace = true }
+regex = { workspace = true }

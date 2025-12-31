@@ -1,0 +1,22 @@
+[package]
+name = "arazzo-store"
+description = "Postgres persistence for Arazzo workflow runs"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+rust-version.workspace = true
+keywords = ["arazzo", "workflow", "postgres", "persistence"]
+categories = ["database"]
+
+[dependencies]
+arazzo-core = { path = "../arazzo-core", version = "0.1.0" }
+tokio = { workspace = true }
+sqlx = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+uuid = { workspace = true }
+chrono = { workspace = true }
+async-trait = { workspace = true }

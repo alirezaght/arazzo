@@ -1,0 +1,54 @@
+arazzo: 1.0.1
+info:
+  title: Conditional Branching Template
+  version: 1.0.0
+  summary: Branch workflow execution based on conditions
+sourceDescriptions:
+  - name: api
+    type: openapi
+    url: https://api.example.com/openapi.json
+workflows:
+  - workflowId: conditional_branch
+    summary: Branch based on input condition
+    inputs:
+      type: object
+      properties:
+        mode:
+          type: string
+          enum: [fast, slow]
+          default: fast
+      required: [mode]
+    steps:
+      - stepId: checkCondition
+        description: Check condition and branch
+        operationId: check
+        successCriteria:
+          - condition: $statusCode == 200
+        onSuccess:
+          - name: goFast
+            type: goto
+            stepId: fastPath
+            criteria:
+              - condition: $inputs.mode == 'fast'
+          - name: goSlow
+            type: goto
+            stepId: slowPath
+            criteria:
+              - condition: $inputs.mode == 'slow'
+      - stepId: fastPath
+        description: Fast execution path
+        operationId: fast
+        successCriteria:
+          - condition: $statusCode == 200
+        outputs:
+          result: $response.body
+      - stepId: slowPath
+        description: Slow execution path
+        operationId: slow
+        successCriteria:
+          - condition: $statusCode == 200
+        outputs:
+          result: $response.body
+    outputs:
+      result: $steps.checkCondition.outputs.result
+

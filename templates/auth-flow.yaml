@@ -1,0 +1,48 @@
+arazzo: 1.0.1
+info:
+  title: Authentication Flow Template
+  version: 1.0.0
+  summary: Authenticate and use token for subsequent API calls
+sourceDescriptions:
+  - name: api
+    type: openapi
+    url: https://api.example.com/openapi.json
+workflows:
+  - workflowId: auth_flow
+    summary: Authenticate and make authenticated calls
+    inputs:
+      type: object
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+      required: [username, password]
+    steps:
+      - stepId: login
+        description: Authenticate and get token
+        operationId: login
+        requestBody:
+          contentType: application/json
+          payload:
+            username: $inputs.username
+            password: $inputs.password
+        successCriteria:
+          - condition: $statusCode == 200
+        outputs:
+          token: $response.body#/token
+      - stepId: getData
+        description: Use token to fetch data
+        operationId: getData
+        parameters:
+          - name: Authorization
+            in: header
+            value: "Bearer {$steps.login.outputs.token}"
+        successCriteria:
+          - condition: $statusCode == 200
+        outputs:
+          data: $response.body
+    outputs:
+      token: $steps.login.outputs.token
+      data: $steps.getData.outputs.data
+

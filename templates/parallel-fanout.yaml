@@ -1,0 +1,58 @@
+arazzo: 1.0.1
+info:
+  title: Parallel Fan-out Template
+  version: 1.0.0
+  summary: Execute multiple independent steps in parallel, then join results
+sourceDescriptions:
+  - name: api
+    type: openapi
+    url: https://api.example.com/openapi.json
+workflows:
+  - workflowId: parallel_fanout
+    summary: Run independent steps in parallel, then join
+    inputs:
+      type: object
+      properties:
+        items:
+          type: array
+          description: List of items to process
+      required: [items]
+    steps:
+      - stepId: processItem1
+        description: Process first item
+        operationId: process
+        parameters:
+          - name: item
+            in: query
+            value: $inputs.items[0]
+        successCriteria:
+          - condition: $statusCode == 200
+        outputs:
+          result: $response.body
+      - stepId: processItem2
+        description: Process second item
+        operationId: process
+        parameters:
+          - name: item
+            in: query
+            value: $inputs.items[1]
+        successCriteria:
+          - condition: $statusCode == 200
+        outputs:
+          result: $response.body
+      - stepId: joinResults
+        description: Combine results from parallel steps
+        operationId: combine
+        requestBody:
+          contentType: application/json
+          payload:
+            results:
+              - $steps.processItem1.outputs.result
+              - $steps.processItem2.outputs.result
+        successCriteria:
+          - condition: $statusCode == 200
+        outputs:
+          combined: $response.body
+    outputs:
+      final: $steps.joinResults.outputs.combined
+

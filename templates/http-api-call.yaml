@@ -1,0 +1,45 @@
+arazzo: 1.0.1
+info:
+  title: HTTP API Call Template
+  version: 1.0.0
+  summary: Template for making HTTP API calls with retry logic
+sourceDescriptions:
+  - name: api
+    type: openapi
+    url: https://api.example.com/openapi.json
+workflows:
+  - workflowId: api_call
+    summary: Make API call with retry
+    inputs:
+      type: object
+      properties:
+        endpoint: 
+          type: string
+          description: API endpoint path
+        method:
+          type: string
+          enum: [GET, POST, PUT, DELETE]
+          default: GET
+      required: [endpoint]
+    failureActions:
+      - name: retryOn5xx
+        type: retry
+        retryAfter: 1
+        retryLimit: 3
+        criteria:
+          - condition: $statusCode >= 500
+    steps:
+      - stepId: callApi
+        description: Make API call
+        operationId: callEndpoint
+        parameters:
+          - name: path
+            in: path
+            value: $inputs.endpoint
+        successCriteria:
+          - condition: $statusCode >= 200 && $statusCode < 300
+        outputs:
+          response: $response.body
+    outputs:
+      result: $steps.callApi.outputs.response
+
