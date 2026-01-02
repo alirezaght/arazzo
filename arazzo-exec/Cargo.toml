@@ -16,8 +16,8 @@ aws-secrets = ["aws-sdk-secretsmanager", "aws-config"]
 gcp-secrets = ["google-cloud-secretmanager-v1"]
 
 [dependencies]
-arazzo-core = { path = "../arazzo-core", version = "0.1.0" }
-arazzo-store = { path = "../arazzo-store", version = "0.1.0" }
+arazzo-core = { path = "../arazzo-core" }
+arazzo-store = { path = "../arazzo-store" }
 tokio = { workspace = true }
 reqwest = { workspace = true }
 serde = { workspace = true }

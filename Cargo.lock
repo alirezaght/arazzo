@@ -78,7 +78,7 @@ dependencies = [
 
 [[package]]
 name = "arazzo-cli"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "arazzo-core",
  "arazzo-exec",
@@ -100,7 +100,7 @@ dependencies = [
 
 [[package]]
 name = "arazzo-core"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "regex",
  "serde",
@@ -111,7 +111,7 @@ dependencies = [
 
 [[package]]
 name = "arazzo-exec"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "arazzo-core",
  "arazzo-store",
@@ -141,7 +141,7 @@ dependencies = [
 
 [[package]]
 name = "arazzo-store"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "arazzo-core",
  "async-trait",

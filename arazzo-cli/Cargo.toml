@@ -15,9 +15,9 @@ name = "arazzo"
 path = "src/main.rs"
 
 [dependencies]
-arazzo-core = { path = "../arazzo-core", version = "0.1.0" }
-arazzo-exec = { path = "../arazzo-exec", version = "0.1.0" }
-arazzo-store = { path = "../arazzo-store", version = "0.1.0" }
+arazzo-core = { path = "../arazzo-core" }
+arazzo-exec = { path = "../arazzo-exec" }
+arazzo-store = { path = "../arazzo-store" }
 clap = { workspace = true }
 serde_json = { workspace = true }
 serde_yaml = { workspace = true }

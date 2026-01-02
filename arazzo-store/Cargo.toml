@@ -11,7 +11,7 @@ keywords = ["arazzo", "workflow", "postgres", "persistence"]
 categories = ["database"]
 
 [dependencies]
-arazzo-core = { path = "../arazzo-core", version = "0.1.0" }
+arazzo-core = { path = "../arazzo-core" }
 tokio = { workspace = true }
 sqlx = { workspace = true }
 serde = { workspace = true }
